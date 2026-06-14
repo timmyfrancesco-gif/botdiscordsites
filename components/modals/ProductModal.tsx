@@ -2,12 +2,12 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import ServiceIcon from "@/components/ui/ServiceIcon";
-import { formatEur } from "@/lib/format";
+import { formatCurrency } from "@/lib/format";
 import { SITE } from "@/lib/config";
-import type { Product } from "@/lib/types";
+import type { ShopItem } from "@/lib/types";
 
 interface ProductModalProps {
-  product: Product | null;
+  product: ShopItem | null;
   onClose: () => void;
 }
 
@@ -37,9 +37,18 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
 
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-4">
-                <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-accent">
-                  <ServiceIcon name={product.icon} className="h-7 w-7" />
-                </div>
+                {product.image ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={product.image}
+                    alt={product.name}
+                    className="h-14 w-14 shrink-0 rounded-xl border border-border object-cover"
+                  />
+                ) : (
+                  <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-xl border border-border bg-background/60 text-accent">
+                    <ServiceIcon name={product.icon} className="h-7 w-7" />
+                  </div>
+                )}
                 <div>
                   <span className="text-xs font-semibold uppercase tracking-[0.2em] text-accent">
                     {product.category}
@@ -66,7 +75,9 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
             <div className="mt-6 flex items-center justify-between rounded-lg border border-border bg-background/60 px-4 py-3">
               <div>
                 <span className="text-xs text-muted">Price</span>
-                <p className="text-xl font-bold text-foreground">{formatEur(product.price)}</p>
+                <p className="text-xl font-bold text-foreground">
+                  {formatCurrency(product.price, product.currency)}
+                </p>
               </div>
               <div className="text-right">
                 <span className="text-xs text-muted">Stock</span>
@@ -81,7 +92,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
             </div>
 
             <a
-              href={SITE.shopUrl}
+              href={product.url ?? SITE.shopUrl}
               target="_blank"
               rel="noopener noreferrer"
               aria-disabled={product.stock === 0}

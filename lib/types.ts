@@ -74,6 +74,53 @@ export interface Product {
   icon: string;
 }
 
+export interface ShopItem {
+  id: string;
+  name: string;
+  category: string;
+  price: number;
+  currency: string;
+  stock: number;
+  description: string;
+  icon: string;
+  image?: string;
+  url?: string;
+}
+
+export interface ApiProduct {
+  id: string;
+  name: string;
+  price: number;
+  currency: string;
+  stock: number;
+  image?: string;
+  description: string;
+  url?: string;
+}
+
+export interface ProductsResponse {
+  products?: ApiProduct[];
+}
+
+export interface ProductOrderRequest {
+  productId: string;
+  discord: string;
+}
+
+export interface ProductOrderResponse {
+  orderId: string;
+  address: string;
+  amountEur: number;
+}
+
+export interface ProductOrderStatusResponse {
+  status: "pending" | "paid";
+  orderId?: string;
+  productId?: string;
+  amountEur?: number;
+  address?: string;
+}
+
 export interface CoinPrice {
   symbol: string;
   name: string;
