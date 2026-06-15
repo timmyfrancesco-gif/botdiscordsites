@@ -111,6 +111,7 @@ export interface ProductOrderResponse {
   orderId: string;
   address: string;
   amountEur: number;
+  productName?: string;
 }
 
 export interface ProductOrderStatusResponse {
@@ -119,6 +120,7 @@ export interface ProductOrderStatusResponse {
   productId?: string;
   amountEur?: number;
   address?: string;
+  deliveredItem?: string | null;
 }
 
 export interface CoinPrice {
