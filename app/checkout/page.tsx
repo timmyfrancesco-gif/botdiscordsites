@@ -13,6 +13,7 @@ import type { ProductOrderResponse, ShopItem } from "@/lib/types";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ORDER_STORAGE_KEY = "checkout_order_v1";
+const FINISHED_STORAGE_KEY = "checkout_finished_v1";
 
 const PAYMENT_METHODS_ICONS = {
   ltc: (
@@ -101,10 +102,22 @@ function CheckoutContent() {
   const [cancelled, setCancelled] = useState(false);
   const [deliveredItems, setDeliveredItems] = useState<(string | null | undefined)[]>([]);
 
-  // Restore order from sessionStorage on mount (survives page reload)
+  // Restore order or finished state from sessionStorage on mount
   useEffect(() => {
     if (!loaded || !productId) return;
     try {
+      // Check if this order was already completed
+      const finishedRaw = sessionStorage.getItem(FINISHED_STORAGE_KEY);
+      if (finishedRaw) {
+        const finishedData = JSON.parse(finishedRaw) as { productId: string; deliveredItems: (string | null | undefined)[]; ts: number };
+        if (finishedData.productId === productId && Date.now() - finishedData.ts < 3_600_000) {
+          setDeliveredItems(finishedData.deliveredItems);
+          setFinished(true);
+          return;
+        }
+        sessionStorage.removeItem(FINISHED_STORAGE_KEY);
+      }
+      // Check for in-progress order
       const raw = sessionStorage.getItem(ORDER_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as { order: ProductOrderResponse; productId: string; email: string; ts: number };
@@ -116,6 +129,7 @@ function CheckoutContent() {
       }
     } catch {
       sessionStorage.removeItem(ORDER_STORAGE_KEY);
+      sessionStorage.removeItem(FINISHED_STORAGE_KEY);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loaded]);
@@ -203,11 +217,19 @@ function CheckoutContent() {
 
   function handlePaid(deliveredItem?: string | null) {
     sessionStorage.removeItem(ORDER_STORAGE_KEY);
-    setDeliveredItems((prev) => [...prev, deliveredItem]);
+    const newDelivered = [...deliveredItems, deliveredItem];
+    setDeliveredItems(newDelivered);
     refetchProducts();
     if (isLast) {
       setFinished(true);
       if (!buyNowProduct) cart.clear();
+      try {
+        sessionStorage.setItem(FINISHED_STORAGE_KEY, JSON.stringify({
+          productId: currentItem.id,
+          deliveredItems: newDelivered,
+          ts: Date.now(),
+        }));
+      } catch {}
       return;
     }
     setIndex((i) => i + 1);
@@ -410,6 +432,7 @@ function SuccessScreen({
 
       <Link
         href="/#shop"
+        onClick={() => { try { sessionStorage.removeItem(FINISHED_STORAGE_KEY); } catch {} }}
         className="mt-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-6 py-2.5 text-sm font-semibold text-emerald-400 transition-colors hover:bg-emerald-500 hover:text-white"
       >
         {t("checkout.backToShop")}
