@@ -60,6 +60,7 @@ export function formatCurrency(value: number, currency: string): string {
 }
 
 export function formatNumber(value: number): string {
+  if (value === undefined || value === null || !isFinite(value)) return "0";
   return new Intl.NumberFormat("en-US").format(value);
 }
 
