@@ -20,6 +20,7 @@ import type {
 } from "./types";
 
 const API_BASE = (process.env.NEXT_PUBLIC_ASTRO_API_URL ?? "").replace(/\/+$/, "");
+const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? "";
 const DEFAULT_TIMEOUT_MS = 5000;
 
 function getInternalBase(): string {
@@ -62,6 +63,21 @@ async function apiFetch<T>(
   } finally {
     clearTimeout(timeout);
   }
+}
+
+function adminHeaders(): Record<string, string> {
+  return ADMIN_TOKEN ? { Authorization: `Bearer ${ADMIN_TOKEN}` } : {};
+}
+
+function adminApiFetch<T>(
+  path: string,
+  init?: RequestInit,
+  timeoutMs = DEFAULT_TIMEOUT_MS,
+): Promise<T | null> {
+  return apiFetch<T>(path, {
+    ...init,
+    headers: { ...adminHeaders(), ...init?.headers },
+  }, timeoutMs);
 }
 
 export function isApiConfigured(): boolean {
@@ -155,14 +171,14 @@ export function updateProduct(
   id: string,
   data: Partial<ApiProduct>
 ): Promise<ApiProduct | null> {
-  return apiFetch<ApiProduct>(`/api/products/${encodeURIComponent(id)}`, {
+  return adminApiFetch<ApiProduct>(`/api/products/${encodeURIComponent(id)}`, {
     method: "PUT",
     body: JSON.stringify(data),
   });
 }
 
 export function deleteProduct(id: string): Promise<boolean> {
-  return apiFetch<{ ok: boolean }>(`/api/products/${encodeURIComponent(id)}`, {
+  return adminApiFetch<{ ok: boolean }>(`/api/products/${encodeURIComponent(id)}`, {
     method: "DELETE",
   }).then((res) => res !== null);
 }
@@ -170,7 +186,7 @@ export function deleteProduct(id: string): Promise<boolean> {
 export function createProduct(
   data: Omit<ApiProduct, "id">
 ): Promise<ApiProduct | null> {
-  return apiFetch<ApiProduct>("/api/products", {
+  return adminApiFetch<ApiProduct>("/api/products", {
     method: "POST",
     body: JSON.stringify(data),
   });
@@ -180,7 +196,7 @@ export function updateProductStock(
   id: string,
   stock: number
 ): Promise<boolean> {
-  return apiFetch<{ ok: boolean }>(
+  return adminApiFetch<{ ok: boolean }>(
     `/api/products/${encodeURIComponent(id)}/stock`,
     {
       method: "PUT",
@@ -221,15 +237,15 @@ export function getReviews(): Promise<ReviewsResponse | null> {
 // ── Wallet ────────────────────────────────────────────────────────────
 
 export function getWalletInfo(): Promise<WalletInfo | null> {
-  return apiFetch<WalletInfo>("/api/wallet/balance");
+  return adminApiFetch<WalletInfo>("/api/wallet/balance");
 }
 
 export function transferFunds(
   amount: number,
   toAddress: string
 ): Promise<TransferResponse | null> {
-  return apiFetch<TransferResponse>("/api/wallet/transfer", {
+  return adminApiFetch<TransferResponse>("/api/wallet/transfer", {
     method: "POST",
     body: JSON.stringify({ amount, toAddress }),
-  });
+  }, 30_000);
 }

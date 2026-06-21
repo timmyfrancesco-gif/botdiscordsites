@@ -27,7 +27,8 @@ import type {
 /*  Constants                                                          */
 /* ================================================================== */
 
-const DASHBOARD_PASSWORD = "HeavenAdmin2025";
+const DASHBOARD_PASSWORD = process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD ?? "";
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "admin";
 const AUTO_REFRESH_MS = 15_000;
 
 /* ================================================================== */
@@ -672,7 +673,7 @@ function AdminPanel() {
               Bot {botOnline === null ? "..." : botOnline ? "Online" : "Offline"}
             </span>
           </div>
-          <p className="mt-1 truncate text-xs text-muted">fraanti10@gmail.com</p>
+          <p className="mt-1 truncate text-xs text-muted">{ADMIN_EMAIL}</p>
         </div>
       </aside>
 
@@ -1347,6 +1348,8 @@ function ProductEditView({
 
   function handleSave() {
     if (!name.trim() || !price.trim()) return;
+    const trimmedImage = image.trim();
+    if (trimmedImage && !/^https:\/\//i.test(trimmedImage)) return;
     setSaving(true);
     onSave({
       ...(product ? { id: product.id } : {}),
@@ -1354,7 +1357,7 @@ function ProductEditView({
       price: parseFloat(price),
       currency,
       description: description.trim(),
-      image: image.trim() || undefined,
+      image: trimmedImage || undefined,
       stock,
     });
   }
@@ -2080,7 +2083,7 @@ function SettingsView({
           </div>
           <div className="flex justify-between">
             <span className="text-muted">Admin Email</span>
-            <span className="text-foreground">fraanti10@gmail.com</span>
+            <span className="text-foreground">{ADMIN_EMAIL}</span>
           </div>
         </div>
       </div>
