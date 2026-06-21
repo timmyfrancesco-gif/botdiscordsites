@@ -5,11 +5,24 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import LtcPayment from "@/components/shop/LtcPayment";
-import { createProductOrder, isApiConfigured } from "@/lib/api";
+import { createProductOrder, isApiConfigured, submitReview } from "@/lib/api";
 import { useCart } from "@/lib/hooks/useCart";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useProducts } from "@/lib/hooks/useProducts";
 import type { ProductOrderResponse, ShopItem } from "@/lib/types";
+
+interface FinishedData {
+  productId: string;
+  productName: string;
+  productIcon?: string;
+  productImage?: string;
+  deliveredItems: (string | null | undefined)[];
+  email: string;
+  totalEur: number;
+  orderId?: string;
+  queueLength: number;
+  ts: number;
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const ORDER_STORAGE_KEY = "checkout_order_v1";
@@ -101,23 +114,30 @@ function CheckoutContent() {
   const [finished, setFinished] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [deliveredItems, setDeliveredItems] = useState<(string | null | undefined)[]>([]);
+  const [restoredFinished, setRestoredFinished] = useState<FinishedData | null>(null);
 
   // Restore order or finished state from sessionStorage on mount
   useEffect(() => {
-    if (!loaded || !productId) return;
+    if (!loaded) return;
     try {
-      // Check if this order was already completed
+      // Check if there's a completed order (works even without productId in URL)
       const finishedRaw = sessionStorage.getItem(FINISHED_STORAGE_KEY);
       if (finishedRaw) {
-        const finishedData = JSON.parse(finishedRaw) as { productId: string; deliveredItems: (string | null | undefined)[]; ts: number };
-        if (finishedData.productId === productId && Date.now() - finishedData.ts < 3_600_000) {
-          setDeliveredItems(finishedData.deliveredItems);
-          setFinished(true);
-          return;
+        const finishedData = JSON.parse(finishedRaw) as FinishedData;
+        if (Date.now() - finishedData.ts < 3_600_000) {
+          if (!productId || finishedData.productId === productId) {
+            setDeliveredItems(finishedData.deliveredItems);
+            setEmail(finishedData.email);
+            setRestoredFinished(finishedData);
+            setFinished(true);
+            return;
+          }
+        } else {
+          sessionStorage.removeItem(FINISHED_STORAGE_KEY);
         }
-        sessionStorage.removeItem(FINISHED_STORAGE_KEY);
       }
-      // Check for in-progress order
+      // Check for in-progress order (requires productId)
+      if (!productId) return;
       const raw = sessionStorage.getItem(ORDER_STORAGE_KEY);
       if (!raw) return;
       const stored = JSON.parse(raw) as { order: ProductOrderResponse; productId: string; email: string; ts: number };
@@ -138,7 +158,7 @@ function CheckoutContent() {
     return <p className="mt-10 text-sm text-muted">{t("checkout.loading")}</p>;
   }
 
-  if (queue.length === 0) {
+  if (queue.length === 0 && !finished) {
     return (
       <div className="mt-10 rounded-2xl border border-border bg-background/60 p-8 text-center">
         <p className="text-sm text-muted">{t("checkout.emptyCart")}</p>
@@ -174,9 +194,17 @@ function CheckoutContent() {
     );
   }
 
-  const currentItem = queue[index];
+  const currentItem = queue[index] as ShopItem | undefined;
   const isLast = index === queue.length - 1;
   const queueTotal = queue.reduce((sum, item) => sum + item.price, 0);
+
+  const displayName = currentItem?.name ?? restoredFinished?.productName ?? "";
+  const displayIcon = currentItem?.icon ?? restoredFinished?.productIcon;
+  const displayImage = currentItem?.image ?? restoredFinished?.productImage;
+  const displayTotal = queueTotal > 0 ? queueTotal : (restoredFinished?.totalEur ?? 0);
+  const displayQueueLen = queue.length > 0 ? queue.length : (restoredFinished?.queueLength ?? 1);
+  const displayOrderId = order?.orderId ?? restoredFinished?.orderId;
+  const displayEmail = email || restoredFinished?.email || "";
 
   async function startPayment(e: React.FormEvent) {
     e.preventDefault();
@@ -192,6 +220,7 @@ function CheckoutContent() {
       return;
     }
 
+    if (!currentItem) return;
     setLoading(true);
     const res = await createProductOrder({
       productId: currentItem.id,
@@ -224,11 +253,19 @@ function CheckoutContent() {
       setFinished(true);
       if (!buyNowProduct) cart.clear();
       try {
-        sessionStorage.setItem(FINISHED_STORAGE_KEY, JSON.stringify({
-          productId: currentItem.id,
+        const finData: FinishedData = {
+          productId: currentItem?.id ?? "",
+          productName: currentItem?.name ?? "",
+          productIcon: currentItem?.icon,
+          productImage: currentItem?.image,
           deliveredItems: newDelivered,
+          email: email.trim(),
+          totalEur: queueTotal,
+          orderId: order?.orderId,
+          queueLength: queue.length,
           ts: Date.now(),
-        }));
+        };
+        sessionStorage.setItem(FINISHED_STORAGE_KEY, JSON.stringify(finData));
       } catch {}
       return;
     }
@@ -265,38 +302,38 @@ function CheckoutContent() {
       <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
         <div className="flex items-center gap-3">
           {/* Product image or icon fallback */}
-          {currentItem.image ? (
+          {displayImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={currentItem.image}
-              alt={currentItem.name}
+              src={displayImage}
+              alt={displayName}
               className="h-12 w-12 rounded-lg border border-border object-cover"
             />
           ) : (
             <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-accent/10 text-lg">
-              {currentItem.icon || "📦"}
+              {displayIcon || "📦"}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{currentItem.name}</p>
+            <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
             <p className="text-xs text-muted">Default</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xs text-muted">{queue.length}x</p>
-            <p className="text-sm font-bold text-foreground">{formatPrice(queueTotal)}</p>
+            <p className="text-xs text-muted">{displayQueueLen}x</p>
+            <p className="text-sm font-bold text-foreground">{formatPrice(displayTotal)}</p>
           </div>
         </div>
       </div>
 
       {finished ? (
         <SuccessScreen
-          productName={currentItem.name}
+          productName={displayName}
           deliveredItems={deliveredItems}
-          orderId={order?.orderId}
-          email={email}
-          totalEur={queueTotal}
+          orderId={displayOrderId}
+          email={displayEmail}
+          totalEur={displayTotal}
         />
-      ) : !order ? (
+      ) : !order && currentItem ? (
         <form onSubmit={startPayment} className="flex flex-col gap-5">
           {/* Contact section */}
           <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
@@ -368,11 +405,11 @@ function CheckoutContent() {
             )}
           </button>
         </form>
-      ) : (
+      ) : order ? (
         <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
           <LtcPayment order={order} cartTotal={queueTotal} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
         </div>
-      )}
+      ) : null}
 
       {/* Back to Shop link at the very bottom */}
       <div className="text-center pt-2">
@@ -407,6 +444,35 @@ function SuccessScreen({
   const hasItems = deliveredItems.some((item) => item);
   const validItems = deliveredItems.filter((item): item is string => !!item);
   const [expanded, setExpanded] = useState(true);
+
+  const [rating, setRating] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [reviewText, setReviewText] = useState("");
+  const [reviewSubmitted, setReviewSubmitted] = useState(false);
+  const [reviewLoading, setReviewLoading] = useState(false);
+  const [reviewError, setReviewError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!orderId) return;
+    try {
+      const stored = sessionStorage.getItem(`review_submitted_${orderId}`);
+      if (stored) setReviewSubmitted(true);
+    } catch {}
+  }, [orderId]);
+
+  async function handleSubmitReview() {
+    if (!orderId || rating === 0) return;
+    setReviewLoading(true);
+    setReviewError(null);
+    const res = await submitReview({ orderId, rating, comment: reviewText.trim() || undefined });
+    setReviewLoading(false);
+    if (res) {
+      setReviewSubmitted(true);
+      try { sessionStorage.setItem(`review_submitted_${orderId}`, "1"); } catch {}
+    } else {
+      setReviewError(t("checkout.reviewError"));
+    }
+  }
 
   async function handleCopySingle(text: string, idx: number) {
     try {
@@ -589,6 +655,69 @@ function SuccessScreen({
           )}
         </div>
       )}
+
+      {/* Leave Feedback */}
+      <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
+        <h3 className="text-accent font-semibold text-lg mb-3">{t("checkout.leaveFeedback")}</h3>
+        {reviewSubmitted ? (
+          <div className="flex items-center gap-2 text-emerald-400 text-sm">
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden>
+              <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+            </svg>
+            {t("checkout.reviewSubmitted")}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
+            {/* Star rating */}
+            <div>
+              <p className="text-xs text-muted mb-2">{t("checkout.tapToRate")}</p>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="transition-transform hover:scale-110"
+                  >
+                    <svg
+                      viewBox="0 0 24 24"
+                      className={`h-8 w-8 transition-colors ${
+                        star <= (hoverRating || rating)
+                          ? "text-yellow-400"
+                          : "text-border"
+                      }`}
+                      fill="currentColor"
+                      aria-hidden
+                    >
+                      <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
+                    </svg>
+                  </button>
+                ))}
+              </div>
+            </div>
+            {/* Review text */}
+            <textarea
+              value={reviewText}
+              onChange={(e) => setReviewText(e.target.value)}
+              placeholder={t("checkout.ratingPlaceholder")}
+              rows={3}
+              className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder-muted outline-none transition-colors focus:border-accent resize-none"
+            />
+            {reviewError && <p className="text-sm text-rose-400">{reviewError}</p>}
+            {/* Submit */}
+            <button
+              type="button"
+              onClick={handleSubmitReview}
+              disabled={rating === 0 || reviewLoading}
+              className="flex items-center justify-center gap-2 rounded-xl bg-accent/80 hover:bg-accent py-3 text-sm font-semibold text-foreground transition-colors disabled:opacity-50"
+            >
+              {reviewLoading ? t("checkout.submittingReview") : t("checkout.submitReview")}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

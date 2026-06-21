@@ -7,6 +7,8 @@ import type {
   ProductOrderResponse,
   ProductOrderStatusResponse,
   ProductsResponse,
+  ReviewRequest,
+  ReviewResponse,
   SlotOrderRequest,
   SlotOrderResponse,
   SlotOrderStatusResponse,
@@ -184,6 +186,17 @@ export function updateProductStock(
       body: JSON.stringify({ stock }),
     }
   ).then((res) => res !== null);
+}
+
+// ── Reviews ──────────────────────────────────────────────────────────
+
+export function submitReview(
+  payload: ReviewRequest
+): Promise<ReviewResponse | null> {
+  return apiFetch<ReviewResponse>("/api/review", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 }
 
 // ── Wallet ────────────────────────────────────────────────────────────

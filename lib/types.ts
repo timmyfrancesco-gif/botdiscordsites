@@ -149,3 +149,13 @@ export interface CoinPrice {
   eur: number | null;
   changePct: number | null;
 }
+
+export interface ReviewRequest {
+  orderId: string;
+  rating: number;
+  comment?: string;
+}
+
+export interface ReviewResponse {
+  ok: boolean;
+}

@@ -148,6 +148,13 @@ const en: Record<string, string> = {
   "checkout.comingSoon": "Coming soon",
   "checkout.cardPaypal": "Card / PayPal",
   "checkout.loading": "Loading…",
+  "checkout.leaveFeedback": "Leave Feedback",
+  "checkout.ratingPlaceholder": "Write a review (optional)",
+  "checkout.submitReview": "Submit Review",
+  "checkout.submittingReview": "Submitting…",
+  "checkout.reviewSubmitted": "Thank you for your feedback!",
+  "checkout.reviewError": "Could not submit review. Please try again.",
+  "checkout.tapToRate": "Tap to rate your experience",
 
   // LTC Payment
   "ltcPayment.amountDue": "Amount due",
