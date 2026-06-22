@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import {
   createProduct,
   deleteProduct,
@@ -15,6 +16,7 @@ import {
   updateProductStock,
 } from "@/lib/api";
 import { formatCurrency, formatEur, formatRelativeTime } from "@/lib/format";
+import { useAuth } from "@/lib/hooks/useAuth";
 import type {
   ApiProduct,
   FeedItem,
@@ -27,8 +29,6 @@ import type {
 /*  Constants                                                          */
 /* ================================================================== */
 
-const DASHBOARD_PASSWORD = process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD ?? "";
-const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL ?? "admin";
 const AUTO_REFRESH_MS = 15_000;
 
 /* ================================================================== */
@@ -284,56 +284,46 @@ function SparkLine({
 }
 
 /* ================================================================== */
-/*  Password Gate                                                      */
+/*  Auth Gate                                                          */
 /* ================================================================== */
 
 export default function SecretDashboardPage() {
-  const [authed, setAuthed] = useState(false);
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
+  const { user, loading } = useAuth();
 
-  function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
-    if (password === DASHBOARD_PASSWORD) {
-      setAuthed(true);
-      setError(null);
-    } else {
-      setError("Incorrect password.");
-    }
+  if (loading) {
+    return (
+      <main className="flex min-h-screen items-center justify-center bg-background">
+        <svg className="h-8 w-8 animate-spin text-accent" viewBox="0 0 24 24" fill="none" aria-hidden>
+          <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" className="opacity-20" />
+          <path d="M12 2a10 10 0 019.95 9" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+        </svg>
+      </main>
+    );
   }
 
-  if (!authed) {
+  if (!user || user.role !== "admin") {
     return (
       <main className="flex min-h-screen items-center justify-center bg-background px-4">
-        <form
-          onSubmit={handleSubmit}
-          className="flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-border bg-background-elevated/60 p-6"
-        >
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/20">
-              <span className="text-lg font-bold text-accent">HM</span>
-            </div>
-            <div>
-              <h1 className="text-lg font-bold text-foreground">Heaven Market</h1>
-              <p className="text-xs text-muted">Admin Dashboard</p>
-            </div>
+        <div className="flex w-full max-w-sm flex-col items-center gap-4 rounded-2xl border border-border bg-background-elevated/60 p-8 text-center">
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border-2 border-rose-500/40 bg-rose-500/10">
+            <svg viewBox="0 0 24 24" className="h-7 w-7 text-rose-500" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0110 0v4" />
+            </svg>
           </div>
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Password"
-            autoFocus
-            className="rounded-lg border border-border bg-background/60 px-3 py-2 text-foreground outline-none transition-colors focus:border-accent"
-          />
-          {error ? <p className="text-sm text-rose-400">{error}</p> : null}
-          <button
-            type="submit"
-            className="rounded-lg bg-accent px-4 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
+          <h1 className="text-lg font-bold text-foreground">Access Denied</h1>
+          <p className="text-sm text-muted">
+            {!user
+              ? "You need to log in with a Discord account that has admin permissions."
+              : "Your account doesn't have admin permissions. Contact the server owner."}
+          </p>
+          <Link
+            href={user ? "/" : "/login"}
+            className="rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90"
           >
-            Unlock
-          </button>
-        </form>
+            {user ? "Back to Home" : "Login"}
+          </Link>
+        </div>
       </main>
     );
   }
@@ -346,6 +336,7 @@ export default function SecretDashboardPage() {
 /* ================================================================== */
 
 function AdminPanel() {
+  const { user: authUser } = useAuth();
   /* ── state ── */
   const [stats, setStats] = useState<StatsResponse | null>(null);
   const [products, setProducts] = useState<ApiProduct[]>([]);
@@ -673,7 +664,7 @@ function AdminPanel() {
               Bot {botOnline === null ? "..." : botOnline ? "Online" : "Offline"}
             </span>
           </div>
-          <p className="mt-1 truncate text-xs text-muted">{ADMIN_EMAIL}</p>
+          <p className="mt-1 truncate text-xs text-muted">{authUser?.email ?? ""}</p>
         </div>
       </aside>
 
@@ -2023,6 +2014,7 @@ function SettingsView({
   products: ApiProduct[];
   feed: FeedItem[];
 }) {
+  const { user: settingsUser } = useAuth();
   return (
     <div className="space-y-6">
       <h3 className="text-lg font-bold text-foreground">Impostazioni</h3>
@@ -2083,7 +2075,7 @@ function SettingsView({
           </div>
           <div className="flex justify-between">
             <span className="text-muted">Admin Email</span>
-            <span className="text-foreground">{ADMIN_EMAIL}</span>
+            <span className="text-foreground">{settingsUser?.email ?? ""}</span>
           </div>
         </div>
       </div>
