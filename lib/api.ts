@@ -18,6 +18,11 @@ import type {
   SlotOrderResponse,
   SlotOrderStatusResponse,
   SlotsResponse,
+  SmmOrderRequest,
+  SmmOrderResponse,
+  SmmOrderStatusResponse,
+  SmmProduct,
+  SmmProductsResponse,
   StatsResponse,
   TransferResponse,
   WalletInfo,
@@ -43,7 +48,10 @@ async function apiFetch<T>(
   init?: RequestInit,
   timeoutMs = DEFAULT_TIMEOUT_MS
 ): Promise<T | null> {
-  if (!API_BASE) return null;
+  if (!API_BASE) {
+    console.warn("[API] API_BASE not configured");
+    return null;
+  }
 
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
@@ -60,9 +68,14 @@ async function apiFetch<T>(
       },
     });
 
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const text = await res.text().catch(() => "");
+      console.error(`[API] ${init?.method ?? "GET"} ${path} → ${res.status}`, text.slice(0, 200));
+      return null;
+    }
     return (await res.json()) as T;
-  } catch {
+  } catch (err) {
+    console.error(`[API] ${init?.method ?? "GET"} ${path} failed:`, err instanceof Error ? err.message : err);
     return null;
   } finally {
     clearTimeout(timeout);
@@ -207,6 +220,52 @@ export function updateProductStock(
       body: JSON.stringify({ stock }),
     }
   ).then((res) => res !== null);
+}
+
+// ── SMM Products ────────────────────────────────────────────────────
+
+export function getSmmProducts(): Promise<SmmProductsResponse | null> {
+  return apiFetch<SmmProductsResponse>("/api/smm-products");
+}
+
+export function createSmmProduct(
+  data: Omit<SmmProduct, "id" | "createdAt">
+): Promise<SmmProduct | null> {
+  return adminApiFetch<SmmProduct>("/api/smm-products", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
+export function updateSmmProduct(
+  id: string,
+  data: Partial<SmmProduct>
+): Promise<SmmProduct | null> {
+  return adminApiFetch<SmmProduct>(`/api/smm-products/${encodeURIComponent(id)}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+}
+
+export function deleteSmmProduct(id: string): Promise<boolean> {
+  return adminApiFetch<{ ok: boolean }>(`/api/smm-products/${encodeURIComponent(id)}`, {
+    method: "DELETE",
+  }).then((res) => res !== null);
+}
+
+export function createSmmOrder(
+  payload: SmmOrderRequest
+): Promise<SmmOrderResponse | null> {
+  return apiFetch<SmmOrderResponse>("/api/smm-order", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getSmmOrder(
+  id: string
+): Promise<SmmOrderStatusResponse | null> {
+  return apiFetch<SmmOrderStatusResponse>(`/api/smm-order/${encodeURIComponent(id)}`);
 }
 
 // ── Reviews ──────────────────────────────────────────────────────────
