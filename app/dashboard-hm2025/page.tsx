@@ -378,13 +378,14 @@ function SparkLine({
   height?: number;
   width?: number;
 }) {
-  if (data.length < 2) return null;
-  const max = Math.max(...data, 1);
-  const min = Math.min(...data, 0);
+  const clean = data.map((v) => (typeof v === "number" && Number.isFinite(v) ? v : 0));
+  if (clean.length < 2) return null;
+  const max = Math.max(...clean, 1);
+  const min = Math.min(...clean, 0);
   const range = max - min || 1;
-  const points = data
+  const points = clean
     .map((val, i) => {
-      const x = (i / (data.length - 1)) * width;
+      const x = (i / (clean.length - 1)) * width;
       const y = height - ((val - min) / range) * (height - 4) - 2;
       return `${x},${y}`;
     })
