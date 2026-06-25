@@ -219,7 +219,9 @@ export default function Shop() {
                     {item.category}
                   </span>
                   <h3 className="mt-1 text-lg font-semibold text-foreground">{item.name}</h3>
-                  <p className="mt-2 flex-1 text-sm text-muted">{item.description}</p>
+                  <p className="mt-2 flex-1 text-sm text-muted">
+                    {item.description?.replace(/<[^>]*>/g, "") ?? ""}
+                  </p>
 
                   <div className="mt-6 flex items-center gap-3">
                     <Link
