@@ -1,5 +1,6 @@
 import dynamic from "next/dynamic";
 import PageShell from "@/components/layout/PageShell";
+import { HomepageDataProvider } from "@/lib/contexts/HomepageDataContext";
 import Hero from "@/components/sections/Hero";
 import LiveTicker from "@/components/sections/LiveTicker";
 import ServicesGrid from "@/components/sections/ServicesGrid";
@@ -18,15 +19,17 @@ export default function Home() {
     <PageShell>
       <Hero />
       <LiveTicker />
-      <ServicesGrid />
-      <LiveDashboard />
-      <Shop />
-      <SmmShop />
-      <Pricing />
-      <Fees />
-      <Testimonials />
-      <Faq />
-      <CtaSection />
+      <HomepageDataProvider>
+        <ServicesGrid />
+        <LiveDashboard />
+        <Shop />
+        <SmmShop />
+        <Pricing />
+        <Fees />
+        <Testimonials />
+        <Faq />
+        <CtaSection />
+      </HomepageDataProvider>
     </PageShell>
   );
 }

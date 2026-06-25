@@ -4,12 +4,15 @@ import ActivityFeed from "@/components/ui/ActivityFeed";
 import ConnectionBadge from "@/components/ui/ConnectionBadge";
 import SectionHeading from "@/components/ui/SectionHeading";
 import StatCard from "@/components/ui/StatCard";
-import { useDashboardData } from "@/lib/hooks/useDashboardData";
 import { formatNumber } from "@/lib/format";
 import { useLocale } from "@/lib/hooks/useLocale";
+import { useHomepageData } from "@/lib/contexts/HomepageDataContext";
+import { isApiConfigured } from "@/lib/api";
 
 export default function LiveDashboard() {
-  const { stats, ltc, feed, isLive, isConfigured } = useDashboardData();
+  const { stats, ltc, feed, loaded } = useHomepageData();
+  const isLive = loaded && Boolean(stats || ltc || feed.length);
+  const isConfigured = isApiConfigured();
   const { t, formatPrice } = useLocale();
 
   return (

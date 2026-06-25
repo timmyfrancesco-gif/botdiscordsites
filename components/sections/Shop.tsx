@@ -7,13 +7,14 @@ import SectionHeading from "@/components/ui/SectionHeading";
 import ServiceIcon from "@/components/ui/ServiceIcon";
 import CartDrawer from "@/components/shop/CartDrawer";
 import { useCart } from "@/lib/hooks/useCart";
-import { useProducts } from "@/lib/hooks/useProducts";
 import { useLocale } from "@/lib/hooks/useLocale";
+import { useHomepageData } from "@/lib/contexts/HomepageDataContext";
 
 type SortOption = "default" | "price-asc" | "price-desc" | "name";
 
 export default function Shop() {
-  const { items, loaded, error } = useProducts();
+  const { shopItems: items, loaded, products: productsRes } = useHomepageData();
+  const error = loaded && !productsRes;
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState<SortOption>("default");

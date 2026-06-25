@@ -4,20 +4,19 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import { TESTIMONIALS } from "@/lib/config";
-import { getReviews } from "@/lib/api";
 import { formatRelativeTime } from "@/lib/format";
 import { useLocale } from "@/lib/hooks/useLocale";
+import { useHomepageData } from "@/lib/contexts/HomepageDataContext";
 import type { Review } from "@/lib/types";
 
 export default function Testimonials() {
   const { t } = useLocale();
+  const { reviews: reviewsRes } = useHomepageData();
   const [liveReviews, setLiveReviews] = useState<Review[]>([]);
 
   useEffect(() => {
-    getReviews().then((res) => {
-      if (res?.reviews) setLiveReviews(res.reviews);
-    });
-  }, []);
+    if (reviewsRes?.reviews) setLiveReviews(reviewsRes.reviews);
+  }, [reviewsRes]);
 
   const hasLive = liveReviews.length > 0;
 
