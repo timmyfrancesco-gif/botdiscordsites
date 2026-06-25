@@ -33,8 +33,10 @@ export default function LocaleSelector() {
         className="flex items-center gap-1.5 rounded-full border border-border bg-background/60 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:border-accent hover:text-accent"
         aria-label="Change language and currency"
       >
-        <span>{currentLang?.flag}</span>
-        <span className="hidden sm:inline">{currentCurrency?.code ?? currency}</span>
+        <span className="hidden sm:inline">{currentLang?.name ?? language}</span>
+        <span className="sm:hidden">{currentLang?.code?.toUpperCase() ?? language}</span>
+        <span className="text-muted">·</span>
+        <span>{currentCurrency?.code ?? currency}</span>
         <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 text-muted" fill="currentColor" aria-hidden>
           <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
         </svg>
@@ -86,7 +88,6 @@ export default function LocaleSelector() {
                         : "text-foreground"
                     }`}
                   >
-                    <span className="text-base">{lang.flag}</span>
                     <span>{lang.name}</span>
                     {language === lang.code && (
                       <svg viewBox="0 0 20 20" className="ml-auto h-4 w-4 text-accent" fill="currentColor" aria-hidden>

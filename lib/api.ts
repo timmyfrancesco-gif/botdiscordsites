@@ -21,7 +21,6 @@ import type {
   SmmOrderRequest,
   SmmOrderResponse,
   SmmOrderStatusResponse,
-  SmmProduct,
   SmmProductsResponse,
   StatsResponse,
   TransferResponse,
@@ -30,7 +29,7 @@ import type {
 
 const API_BASE = (process.env.NEXT_PUBLIC_ASTRO_API_URL ?? "").replace(/\/+$/, "");
 const ADMIN_TOKEN = process.env.NEXT_PUBLIC_ADMIN_TOKEN ?? "";
-const DEFAULT_TIMEOUT_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 10_000;
 
 function getInternalBase(): string {
   if (!API_BASE) return "";
@@ -118,6 +117,7 @@ export async function getStats(): Promise<StatsResponse | null> {
 }
 
 async function fetchInternalStats(): Promise<{ activeTickets?: number } | null> {
+  if (typeof window !== "undefined") return null;
   const base = getInternalBase();
   if (!base) return null;
   try {
@@ -226,31 +226,6 @@ export function updateProductStock(
 
 export function getSmmProducts(): Promise<SmmProductsResponse | null> {
   return apiFetch<SmmProductsResponse>("/api/smm-products");
-}
-
-export function createSmmProduct(
-  data: Omit<SmmProduct, "id" | "createdAt">
-): Promise<SmmProduct | null> {
-  return adminApiFetch<SmmProduct>("/api/smm-products", {
-    method: "POST",
-    body: JSON.stringify(data),
-  });
-}
-
-export function updateSmmProduct(
-  id: string,
-  data: Partial<SmmProduct>
-): Promise<SmmProduct | null> {
-  return adminApiFetch<SmmProduct>(`/api/smm-products/${encodeURIComponent(id)}`, {
-    method: "PUT",
-    body: JSON.stringify(data),
-  });
-}
-
-export function deleteSmmProduct(id: string): Promise<boolean> {
-  return adminApiFetch<{ ok: boolean }>(`/api/smm-products/${encodeURIComponent(id)}`, {
-    method: "DELETE",
-  }).then((res) => res !== null);
 }
 
 export function createSmmOrder(

@@ -11,6 +11,13 @@ import { useLocale } from "@/lib/hooks/useLocale";
 import { useProducts } from "@/lib/hooks/useProducts";
 import type { ProductOrderResponse, ShopItem } from "@/lib/types";
 
+interface QueueItem {
+  item: ShopItem;
+  variantId?: string;
+  variantTitle?: string;
+  variantPrice?: number;
+}
+
 interface FinishedData {
   productId: string;
   productName: string;
@@ -81,6 +88,7 @@ function CheckoutContent() {
   const { t, formatPrice } = useLocale();
   const searchParams = useSearchParams();
   const productId = searchParams.get("productId");
+  const variantId = searchParams.get("variantId");
   const qty = Math.max(1, Number(searchParams.get("qty") ?? "1") || 1);
 
   const { items, loaded, refetch: refetchProducts } = useProducts();
@@ -93,17 +101,32 @@ function CheckoutContent() {
   ], [t]);
 
   const buyNowProduct = productId ? items.find((item) => String(item.id) === productId) : null;
+  const buyNowVariant = buyNowProduct && variantId
+    ? buyNowProduct.variants?.find((v) => v.id === variantId) ?? null
+    : null;
 
-  const queue = useMemo(() => {
+  const queue = useMemo((): QueueItem[] => {
     if (buyNowProduct) {
-      return Array.from({ length: qty }, () => buyNowProduct);
+      return Array.from({ length: qty }, () => ({
+        item: buyNowProduct,
+        variantId: buyNowVariant?.id,
+        variantTitle: buyNowVariant?.title,
+        variantPrice: buyNowVariant?.price,
+      }));
     }
-    const result: ShopItem[] = [];
+    const result: QueueItem[] = [];
     for (const line of cart.lines) {
-      for (let i = 0; i < line.quantity; i++) result.push(line.item);
+      for (let i = 0; i < line.quantity; i++) {
+        result.push({
+          item: line.item,
+          variantId: line.variantId,
+          variantTitle: line.variantTitle,
+          variantPrice: line.variantPrice,
+        });
+      }
     }
     return result;
-  }, [buyNowProduct, qty, cart.lines]);
+  }, [buyNowProduct, buyNowVariant, qty, cart.lines]);
 
   const [paymentMethod, setPaymentMethod] = useState("ltc");
   const [email, setEmail] = useState("");
@@ -194,9 +217,19 @@ function CheckoutContent() {
     );
   }
 
-  const currentItem = queue[index] as ShopItem | undefined;
+  const currentEntry = queue[index] as QueueItem | undefined;
+  const currentItem = currentEntry?.item;
   const isLast = index === queue.length - 1;
-  const queueTotal = queue.reduce((sum, item) => sum + item.price, 0);
+  const queueTotal = useMemo(() => {
+    if (buyNowProduct) {
+      const unitPrice = buyNowVariant?.price ?? buyNowProduct.price;
+      return unitPrice * qty;
+    }
+    return cart.lines.reduce((sum, line) => {
+      const price = line.variantPrice ?? line.item.price;
+      return sum + price * line.quantity;
+    }, 0);
+  }, [buyNowProduct, buyNowVariant, qty, cart.lines]);
 
   const displayName = currentItem?.name ?? restoredFinished?.productName ?? "";
   const displayIcon = currentItem?.icon ?? restoredFinished?.productIcon;
@@ -220,11 +253,12 @@ function CheckoutContent() {
       return;
     }
 
-    if (!currentItem) return;
+    if (!currentItem || !currentEntry) return;
     setLoading(true);
     const res = await createProductOrder({
       productId: currentItem.id,
       discord: email.trim(),
+      ...(currentEntry.variantId ? { variantId: currentEntry.variantId } : {}),
     });
     setLoading(false);
 
@@ -316,7 +350,7 @@ function CheckoutContent() {
           )}
           <div className="flex-1 min-w-0">
             <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-            <p className="text-xs text-muted">Default</p>
+            <p className="text-xs text-muted">{currentEntry?.variantTitle ?? "Default"}</p>
           </div>
           <div className="text-right shrink-0">
             <p className="text-xs text-muted">{displayQueueLen}x</p>

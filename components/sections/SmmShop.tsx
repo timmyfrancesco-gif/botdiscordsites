@@ -4,22 +4,22 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
-import { getSmmProducts } from "@/lib/api";
 import { useLocale } from "@/lib/hooks/useLocale";
+import { useHomepageData } from "@/lib/contexts/HomepageDataContext";
 import type { SmmProduct } from "@/lib/types";
 
 export default function SmmShop() {
+  const { smmProducts: smmRes, loaded: hpLoaded } = useHomepageData();
   const [products, setProducts] = useState<SmmProduct[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [category, setCategory] = useState("All");
   const { formatPrice } = useLocale();
 
   useEffect(() => {
-    getSmmProducts().then((res) => {
-      if (res?.products) setProducts(res.products.filter((p) => p.active));
-      setLoaded(true);
-    });
-  }, []);
+    if (!hpLoaded) return;
+    if (smmRes?.products) setProducts(smmRes.products.filter((p) => p.active));
+    setLoaded(true);
+  }, [hpLoaded, smmRes]);
 
   const categories = useMemo(() => {
     const unique = Array.from(new Set(products.map((p) => p.category).filter(Boolean)));

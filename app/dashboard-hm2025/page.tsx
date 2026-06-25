@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   createProduct,
@@ -32,7 +32,7 @@ const RichTextEditor = dynamic(() => import("@/components/ui/RichTextEditor"), {
 /*  Constants                                                          */
 /* ================================================================== */
 
-const AUTO_REFRESH_MS = 15_000;
+const AUTO_REFRESH_MS = 60_000;
 
 const STOREFRONT_CONFIG_KEY = "hm_storefront_config";
 
@@ -378,13 +378,14 @@ function SparkLine({
   height?: number;
   width?: number;
 }) {
-  if (data.length < 2) return null;
-  const max = Math.max(...data, 1);
-  const min = Math.min(...data, 0);
+  const clean = data.map((v) => (typeof v === "number" && Number.isFinite(v) ? v : 0));
+  if (clean.length < 2) return null;
+  const max = Math.max(...clean, 1);
+  const min = Math.min(...clean, 0);
   const range = max - min || 1;
-  const points = data
+  const points = clean
     .map((val, i) => {
-      const x = (i / (data.length - 1)) * width;
+      const x = (i / (clean.length - 1)) * width;
       const y = height - ((val - min) / range) * (height - 4) - 2;
       return `${x},${y}`;
     })
@@ -567,63 +568,84 @@ function AdminPanel() {
   }, [refresh]);
 
   useEffect(() => {
-    if (autoRefresh) {
-      intervalRef.current = setInterval(refresh, AUTO_REFRESH_MS);
+    function startPolling() {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (autoRefresh && !document.hidden) {
+        intervalRef.current = setInterval(refresh, AUTO_REFRESH_MS);
+      }
     }
+    function onVisibility() {
+      if (document.hidden) {
+        if (intervalRef.current) clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      } else {
+        startPolling();
+      }
+    }
+    startPolling();
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [autoRefresh, refresh]);
 
-  /* -- computed -- */
-  const filteredProducts = productSearch.trim()
-    ? products.filter(
-        (p) =>
-          p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
-          p.id.toString().includes(productSearch)
-      )
-    : products;
+  /* -- computed (memoized) -- */
+  const filteredProducts = useMemo(
+    () =>
+      productSearch.trim()
+        ? products.filter(
+            (p) =>
+              p.name.toLowerCase().includes(productSearch.toLowerCase()) ||
+              p.id.toString().includes(productSearch)
+          )
+        : products,
+    [products, productSearch]
+  );
 
-  const orderFeed = feed.filter((f) => f.type === "order");
-  const revenueTotal =
-    stats?.totalVolumeEur ?? orderFeed.reduce((s, f) => s + (f.amount ?? 0), 0);
+  const orderFeed = useMemo(() => feed.filter((f) => f.type === "order"), [feed]);
+  const revenueTotal = useMemo(
+    () => stats?.totalVolumeEur ?? orderFeed.reduce((s, f) => s + (f.amount ?? 0), 0),
+    [stats, orderFeed]
+  );
   const orderCount = stats?.totalOrders ?? orderFeed.length;
   const customerCount = stats?.totalCustomers ?? 0;
   const avgOrderValue = orderCount > 0 ? revenueTotal / orderCount : 0;
 
-  /* -- daily aggregations for charts -- */
-  const last7Days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date();
-    d.setDate(d.getDate() - (6 - i));
-    return d;
-  });
-  const dayLabels = last7Days.map((d) =>
-    d.toLocaleDateString("en", { weekday: "short" })
-  );
-
-  const dailyRevenue = last7Days.map((day) => {
-    const dayStart = new Date(day);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(day);
-    dayEnd.setHours(23, 59, 59, 999);
-    return orderFeed
-      .filter((f) => {
+  /* -- daily aggregations for charts (memoized) -- */
+  const { dayLabels, dailyRevenue, dailyOrders } = useMemo(() => {
+    const days = Array.from({ length: 7 }, (_, i) => {
+      const d = new Date();
+      d.setDate(d.getDate() - (6 - i));
+      return d;
+    });
+    const labels = days.map((d) =>
+      d.toLocaleDateString("en", { weekday: "short" })
+    );
+    const revenue = days.map((day) => {
+      const dayStart = new Date(day);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23, 59, 59, 999);
+      return orderFeed
+        .filter((f) => {
+          const ts = f.ts > 1e12 ? f.ts : f.ts * 1000;
+          return ts >= dayStart.getTime() && ts <= dayEnd.getTime();
+        })
+        .reduce((s, f) => s + (f.amount ?? 0), 0);
+    });
+    const orders = days.map((day) => {
+      const dayStart = new Date(day);
+      dayStart.setHours(0, 0, 0, 0);
+      const dayEnd = new Date(day);
+      dayEnd.setHours(23, 59, 59, 999);
+      return orderFeed.filter((f) => {
         const ts = f.ts > 1e12 ? f.ts : f.ts * 1000;
         return ts >= dayStart.getTime() && ts <= dayEnd.getTime();
-      })
-      .reduce((s, f) => s + (f.amount ?? 0), 0);
-  });
-
-  const dailyOrders = last7Days.map((day) => {
-    const dayStart = new Date(day);
-    dayStart.setHours(0, 0, 0, 0);
-    const dayEnd = new Date(day);
-    dayEnd.setHours(23, 59, 59, 999);
-    return orderFeed.filter((f) => {
-      const ts = f.ts > 1e12 ? f.ts : f.ts * 1000;
-      return ts >= dayStart.getTime() && ts <= dayEnd.getTime();
-    }).length;
-  });
+      }).length;
+    });
+    return { dayLabels: labels, dailyRevenue: revenue, dailyOrders: orders };
+  }, [orderFeed]);
 
   /* -- product actions -- */
   async function handleStockChange(product: ApiProduct, delta: number) {
@@ -1032,6 +1054,7 @@ function AdminPanel() {
           )}
           {activeNav === "product-edit" && (
             <ProductEditView
+              key={editingProduct?.id ?? "new"}
               product={editingProduct}
               onSave={handleSaveProduct}
               onCancel={() => navigateTo("products")}
@@ -1621,7 +1644,7 @@ function ProductEditView({
   onDelete,
 }: {
   product: ApiProduct | null;
-  onSave: (data: Partial<ApiProduct> & { id?: string }) => void;
+  onSave: (data: Partial<ApiProduct> & { id?: string }) => Promise<void> | void;
   onCancel: () => void;
   onDelete: (product: ApiProduct) => void;
 }) {
@@ -1629,36 +1652,34 @@ function ProductEditView({
   const [urlPath, setUrlPath] = useState(product?.url ?? "");
   const [urlManuallyEdited, setUrlManuallyEdited] = useState(!!product?.url);
   const [description, setDescription] = useState(product?.description ?? "");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(product?.category ?? "");
   const [images, setImages] = useState<string[]>(
-    product?.image ? [product.image] : [],
+    product?.images?.length ? product.images : product?.image ? [product.image] : [],
   );
-  const [instructions, setInstructions] = useState("");
+  const [instructions, setInstructions] = useState(product?.instructions ?? "");
   const [deliverableType, setDeliverableType] = useState<
     "serials" | "service" | "dynamic" | "files" | "smm-panels"
-  >("serials");
-  const [smmServiceId, setSmmServiceId] = useState("");
-  const [smmMinQty, setSmmMinQty] = useState("");
-  const [smmMaxQty, setSmmMaxQty] = useState("");
+  >((product?.deliverableType as "serials" | "service" | "dynamic" | "files" | "smm-panels") ?? "serials");
+  const [smmServiceId, setSmmServiceId] = useState(product?.smmServiceId?.toString() ?? "");
+  const [smmMinQty, setSmmMinQty] = useState(product?.smmMinQty?.toString() ?? "");
+  const [smmMaxQty, setSmmMaxQty] = useState(product?.smmMaxQty?.toString() ?? "");
   const [variants, setVariants] = useState<
     { id: string; title: string; price: string; stock: number; stockItems: string }[]
   >(
-    product
-      ? [
-          {
-            id: Math.random().toString(36).slice(2),
-            title: "Default",
-            price: product.price?.toString() ?? "",
-            stock: product.stock ?? 0,
-            stockItems: "",
-          },
-        ]
+    product?.variants?.length
+      ? product.variants.map((v) => ({
+          id: v.id,
+          title: v.title,
+          price: v.price?.toString() ?? "",
+          stock: v.stock ?? 0,
+          stockItems: v.stockItems ?? "",
+        }))
       : [
           {
             id: Math.random().toString(36).slice(2),
             title: "Default",
-            price: "",
-            stock: 0,
+            price: product?.price?.toString() ?? "",
+            stock: product?.stock ?? 0,
             stockItems: "",
           },
         ],
@@ -1736,28 +1757,45 @@ function ProductEditView({
     }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!name.trim()) return;
     const hasPrice = variants.some((v) => v.price.trim());
     if (!hasPrice) return;
     setSaving(true);
-    const prices = variants.map((v) => parseFloat(v.price) || 0);
-    const cheapest = Math.min(...prices);
-    const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
-    onSave({
-      ...(product ? { id: product.id } : {}),
-      name: name.trim(),
-      price: cheapest,
-      currency: "EUR",
-      description,
-      image: images[0] || undefined,
-      url: urlPath || undefined,
-      stock: totalStock,
-    });
-  }
-
-  function handleSaveAndExit() {
-    handleSave();
+    try {
+      const prices = variants.map((v) => parseFloat(v.price) || 0);
+      const cheapest = Math.min(...prices);
+      const totalStock = variants.reduce((sum, v) => sum + v.stock, 0);
+      const builtVariants = variants.map((v) => ({
+        id: v.id,
+        title: v.title,
+        price: parseFloat(v.price) || 0,
+        stock: v.stock,
+        stockItems: v.stockItems || undefined,
+      }));
+      await onSave({
+        ...(product ? { id: product.id } : {}),
+        name: name.trim(),
+        price: cheapest,
+        currency: "EUR",
+        description,
+        image: images[0] || undefined,
+        images: images.length > 0 ? images : undefined,
+        url: urlPath || undefined,
+        stock: totalStock,
+        category: category.trim() || undefined,
+        instructions: instructions || undefined,
+        deliverableType: deliverableType || undefined,
+        variants: builtVariants,
+        ...(deliverableType === "smm-panels" ? {
+          smmServiceId: smmServiceId ? parseInt(smmServiceId, 10) : undefined,
+          smmMinQty: smmMinQty ? parseInt(smmMinQty, 10) : undefined,
+          smmMaxQty: smmMaxQty ? parseInt(smmMaxQty, 10) : undefined,
+        } : {}),
+      });
+    } finally {
+      setSaving(false);
+    }
   }
 
   const deliverableOptions: {
@@ -1799,7 +1837,7 @@ function ProductEditView({
           )}
           <button
             type="button"
-            onClick={handleSaveAndExit}
+            onClick={handleSave}
             disabled={saving || !name.trim()}
             className="rounded-lg border border-indigo-500/30 px-4 py-2 text-xs font-semibold text-indigo-400 transition-all hover:bg-indigo-500/10 disabled:opacity-50"
           >
