@@ -1053,8 +1053,15 @@ function AdminPanel() {
               onEdit={openProductEdit}
               onNew={() => openProductEdit(null)}
               onDelete={(p) => setModal({ kind: "confirm-delete", product: p })}
-              onStockChange={handleStockChange}
-              ltc={ltc}
+              onClone={(p) => {
+                const cloned: ApiProduct = {
+                  ...p,
+                  id: "",
+                  name: `${p.name} (Copy)`,
+                  stock: 0,
+                };
+                openProductEdit(cloned);
+              }}
             />
           )}
           {activeNav === "product-edit" && (
@@ -1477,8 +1484,7 @@ function ProductsView({
   onEdit,
   onNew,
   onDelete,
-  onStockChange,
-  ltc,
+  onClone,
 }: {
   products: ApiProduct[];
   productSearch: string;
@@ -1486,143 +1492,217 @@ function ProductsView({
   onEdit: (product: ApiProduct) => void;
   onNew: () => void;
   onDelete: (product: ApiProduct) => void;
-  onStockChange: (product: ApiProduct, delta: number) => void;
-  ltc: LtcResponse | null;
+  onClone: (product: ApiProduct) => void;
 }) {
-  const inStock = products.filter((p) => p.stock > 0).length;
-  const outOfStock = products.filter((p) => p.stock <= 0).length;
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  function priceDisplay(p: ApiProduct) {
+    if (p.variants && p.variants.length > 1) {
+      const prices = p.variants.map((v) => v.price);
+      const min = Math.min(...prices);
+      const max = Math.max(...prices);
+      return min === max
+        ? formatCurrency(min, p.currency)
+        : `${formatCurrency(min, p.currency)} - ${formatCurrency(max, p.currency)}`;
+    }
+    return formatCurrency(p.price, p.currency);
+  }
+
+  function totalStock(p: ApiProduct) {
+    if (p.variants && p.variants.length > 0) {
+      return p.variants.reduce((s, v) => s + v.stock, 0);
+    }
+    return p.stock;
+  }
 
   return (
     <div className="space-y-5">
       {/* Header */}
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h3 className="text-xl font-bold text-white">Products</h3>
+          <h3 className="text-2xl font-bold text-white">Products</h3>
           <p className="mt-0.5 text-sm text-zinc-500">
-            Manage your product catalog ({products.length} total)
+            Manage your product inventory.
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <div className="relative">
-            <IconSearch className="absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="text"
-              value={productSearch}
-              onChange={(e) => onSearchChange(e.target.value)}
-              placeholder="Search products..."
-              className="w-56 rounded-lg border border-white/10 py-2 pl-9 pr-3 text-xs text-white outline-none transition-all focus:border-indigo-500/50 placeholder:text-zinc-600"
-              style={{ backgroundColor: "#161619" }}
-            />
-          </div>
           <button
             type="button"
             onClick={onNew}
-            className="rounded-lg bg-indigo-500 px-4 py-2 text-xs font-bold text-white transition-all hover:bg-indigo-600"
+            className="rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:bg-indigo-600"
           >
             + Create Product
           </button>
         </div>
       </div>
 
-      {/* Product grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {products.length === 0 ? (
-          <div className="col-span-full flex flex-col items-center justify-center rounded-xl border border-white/5 py-16" style={{ backgroundColor: "#121214" }}>
-            <IconProducts className="h-10 w-10 text-zinc-600" />
-            <p className="mt-3 text-sm text-zinc-500">No products found.</p>
-          </div>
-        ) : (
-          products.map((p) => (
-            <div
-              key={p.id}
-              className="group flex flex-col overflow-hidden rounded-xl border border-white/5 transition-all hover:border-white/10 cursor-pointer"
-              style={{ backgroundColor: "#121214" }}
-              onClick={() => onEdit(p)}
-            >
-              {/* Banner / Image */}
-              <div className="relative h-28 w-full overflow-hidden">
-                {p.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={p.image}
-                    alt=""
-                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/10">
-                    <IconProducts className="h-8 w-8 text-indigo-400/40" />
-                  </div>
-                )}
-                {/* Stock badge */}
-                <span
-                  className={`absolute right-2 top-2 rounded-md px-2 py-0.5 text-[10px] font-bold backdrop-blur-sm ${
-                    p.stock > 0
-                      ? "bg-emerald-500/20 text-emerald-400"
-                      : "bg-rose-500/20 text-rose-400"
-                  }`}
-                >
-                  {p.stock > 0 ? `${p.stock} in stock` : "Out of stock"}
-                </span>
-              </div>
+      {/* Filters bar */}
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        <div className="relative">
+          <IconSearch className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-500" />
+          <input
+            type="text"
+            value={productSearch}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Search by name..."
+            className="w-60 rounded-lg border border-white/10 py-2.5 pl-10 pr-4 text-sm text-white outline-none transition-all focus:border-indigo-500/50 placeholder:text-zinc-600"
+            style={{ backgroundColor: "#161619" }}
+          />
+        </div>
+        <div className="flex overflow-hidden rounded-lg border border-white/10">
+          <button
+            type="button"
+            onClick={() => setViewMode("list")}
+            className={`flex items-center justify-center px-3 py-2 transition-colors ${viewMode === "list" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-white"}`}
+            aria-label="List view"
+          >
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor"><path fillRule="evenodd" d="M2 4.75A.75.75 0 012.75 4h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 4.75zm0 5A.75.75 0 012.75 9h14.5a.75.75 0 010 1.5H2.75A.75.75 0 012 9.75zm0 5a.75.75 0 01.75-.75h14.5a.75.75 0 010 1.5H2.75a.75.75 0 01-.75-.75z" clipRule="evenodd" /></svg>
+          </button>
+          <button
+            type="button"
+            onClick={() => setViewMode("grid")}
+            className={`flex items-center justify-center px-3 py-2 transition-colors ${viewMode === "grid" ? "bg-white/10 text-white" : "text-zinc-500 hover:text-white"}`}
+            aria-label="Grid view"
+          >
+            <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor"><path fillRule="evenodd" d="M4.25 2A2.25 2.25 0 002 4.25v2.5A2.25 2.25 0 004.25 9h2.5A2.25 2.25 0 009 6.75v-2.5A2.25 2.25 0 006.75 2h-2.5zm0 9A2.25 2.25 0 002 13.25v2.5A2.25 2.25 0 004.25 18h2.5A2.25 2.25 0 009 15.75v-2.5A2.25 2.25 0 006.75 11h-2.5zm9-9A2.25 2.25 0 0011 4.25v2.5A2.25 2.25 0 0013.25 9h2.5A2.25 2.25 0 0018 6.75v-2.5A2.25 2.25 0 0015.75 2h-2.5zm0 9A2.25 2.25 0 0011 13.25v2.5A2.25 2.25 0 0013.25 18h2.5A2.25 2.25 0 0018 15.75v-2.5A2.25 2.25 0 0015.75 11h-2.5z" clipRule="evenodd" /></svg>
+          </button>
+        </div>
+      </div>
 
-              {/* Info */}
-              <div className="flex flex-1 flex-col p-4">
-                <h4 className="text-sm font-semibold text-white truncate">{p.name}</h4>
-                <p className="mt-1 truncate text-xs text-zinc-500">{p.description}</p>
-                <div className="mt-3 flex items-center gap-2">
-                  <span className="rounded-md bg-indigo-500/10 px-2 py-0.5 text-xs font-bold text-indigo-400">
-                    {formatCurrency(p.price, p.currency)}
-                  </span>
-                  {ltc && (
-                    <span className="text-[10px] text-zinc-600 font-mono">
-                      {(p.price / ltc.eur).toFixed(4)} LTC
-                    </span>
+      {/* Product grid */}
+      {products.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-white/5 py-16" style={{ backgroundColor: "#121214" }}>
+          <IconProducts className="h-10 w-10 text-zinc-600" />
+          <p className="mt-3 text-sm text-zinc-500">No products found.</p>
+        </div>
+      ) : viewMode === "grid" ? (
+        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          {products.map((p) => {
+            const stock = totalStock(p);
+            return (
+              <div
+                key={p.id}
+                className="group flex flex-col overflow-hidden rounded-xl border border-white/5 transition-all hover:border-white/10 cursor-pointer"
+                style={{ backgroundColor: "#121214" }}
+                onClick={() => onEdit(p)}
+              >
+                {/* Product Image */}
+                <div className="relative h-44 w-full overflow-hidden">
+                  {p.image || (p.images && p.images[0]) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={p.images?.[0] || p.image}
+                      alt=""
+                      className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/10">
+                      <IconProducts className="h-12 w-12 text-indigo-400/40" />
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {/* Actions */}
-              <div className="flex items-center justify-between border-t border-white/5 px-4 py-2.5" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center gap-1">
-                  <button
-                    type="button"
-                    onClick={() => onStockChange(p, -1)}
-                    className="flex h-6 w-6 items-center justify-center rounded border border-white/10 text-xs font-bold text-rose-400 transition-all hover:border-rose-400/30 hover:bg-rose-500/10"
-                  >
-                    -
-                  </button>
-                  <span className="min-w-[2rem] text-center text-xs font-semibold text-zinc-300">
-                    {p.stock}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => onStockChange(p, 1)}
-                    className="flex h-6 w-6 items-center justify-center rounded border border-white/10 text-xs font-bold text-emerald-400 transition-all hover:border-emerald-400/30 hover:bg-emerald-500/10"
-                  >
-                    +
-                  </button>
+                {/* Info */}
+                <div className="flex flex-1 flex-col px-5 pt-4 pb-2">
+                  <h4 className="text-sm font-semibold text-white truncate">{p.name}</h4>
+                  <div className="mt-1.5 flex items-center justify-between gap-2">
+                    <span className="text-sm font-medium text-zinc-300">
+                      {priceDisplay(p)}
+                    </span>
+                    <span
+                      className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold ${
+                        stock > 0 && stock <= 5
+                          ? "bg-amber-500/10 text-amber-400"
+                          : stock > 0
+                            ? "bg-emerald-500/10 text-emerald-400"
+                            : "bg-rose-500/10 text-rose-400"
+                      }`}
+                    >
+                      {stock <= 0 ? (
+                        <>
+                          <svg viewBox="0 0 20 20" className="h-3 w-3" fill="currentColor"><path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.168 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
+                          Out of stock
+                        </>
+                      ) : stock <= 5 ? (
+                        <>
+                          <svg viewBox="0 0 20 20" className="h-3 w-3" fill="currentColor"><path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.168 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" /></svg>
+                          {stock} left
+                        </>
+                      ) : (
+                        `${stock} in stock`
+                      )}
+                    </span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between text-xs text-zinc-500">
+                    <span>Public</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
+
+                {/* Actions */}
+                <div className="flex items-center gap-4 px-5 pb-4 pt-1" onClick={(e) => e.stopPropagation()}>
                   <button
                     type="button"
-                    onClick={() => onEdit(p)}
-                    className="text-xs text-zinc-500 transition-colors hover:text-indigo-400"
+                    onClick={() => onClone(p)}
+                    className="text-xs font-semibold text-indigo-400 transition-colors hover:text-indigo-300"
                   >
-                    Edit
+                    Clone
                   </button>
                   <button
                     type="button"
                     onClick={() => onDelete(p)}
-                    className="text-xs text-zinc-500 transition-colors hover:text-rose-400"
+                    className="text-xs font-semibold text-rose-400 transition-colors hover:text-rose-300"
                   >
                     Delete
                   </button>
                 </div>
               </div>
-            </div>
-          ))
-        )}
-      </div>
+            );
+          })}
+        </div>
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-white/5" style={{ backgroundColor: "#121214" }}>
+          {products.map((p, i) => {
+            const stock = totalStock(p);
+            return (
+              <div
+                key={p.id}
+                onClick={() => onEdit(p)}
+                className={`flex cursor-pointer items-center gap-4 px-5 py-4 transition-colors hover:bg-white/[0.03] ${i > 0 ? "border-t border-white/5" : ""}`}
+              >
+                <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg">
+                  {p.image || (p.images && p.images[0]) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={p.images?.[0] || p.image} alt="" className="h-full w-full object-cover" />
+                  ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-indigo-500/20 to-purple-500/10">
+                      <IconProducts className="h-5 w-5 text-indigo-400/40" />
+                    </div>
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-sm font-semibold text-white truncate">{p.name}</h4>
+                  <p className="text-xs text-zinc-500">{priceDisplay(p)}</p>
+                </div>
+                <span
+                  className={`flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold shrink-0 ${
+                    stock > 0 && stock <= 5
+                      ? "bg-amber-500/10 text-amber-400"
+                      : stock > 0
+                        ? "bg-emerald-500/10 text-emerald-400"
+                        : "bg-rose-500/10 text-rose-400"
+                  }`}
+                >
+                  {stock <= 0 ? "Out of stock" : stock <= 5 ? `${stock} left` : `${stock} in stock`}
+                </span>
+                <div className="flex items-center gap-3 shrink-0" onClick={(e) => e.stopPropagation()}>
+                  <button type="button" onClick={() => onClone(p)} className="text-xs font-semibold text-indigo-400 hover:text-indigo-300">Clone</button>
+                  <button type="button" onClick={() => onDelete(p)} className="text-xs font-semibold text-rose-400 hover:text-rose-300">Delete</button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
