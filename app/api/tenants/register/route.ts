@@ -23,12 +23,14 @@ function slugify(name: string): string {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { email, username, password, shopName, shopSlug } = body as {
+    const { email, username, password, shopName, shopSlug, shopLogo, shopDescription } = body as {
       email?: string;
       username?: string;
       password?: string;
       shopName?: string;
       shopSlug?: string;
+      shopLogo?: string;
+      shopDescription?: string;
     };
 
     if (!email || !username || !password || !shopName) {
@@ -84,6 +86,8 @@ export async function POST(req: Request) {
         slug,
         name: shopName,
         ownerId: user.id,
+        logo: shopLogo || null,
+        description: shopDescription || "",
       })
       .returning();
 

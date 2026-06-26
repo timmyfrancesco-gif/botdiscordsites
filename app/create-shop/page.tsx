@@ -18,6 +18,8 @@ export default function CreateShopPage() {
     password: "",
     shopName: "",
     shopSlug: "",
+    shopLogo: "",
+    shopDescription: "",
   });
 
   const baseDomain =
@@ -47,6 +49,10 @@ export default function CreateShopPage() {
       setError("Password must be at least 8 characters");
       return;
     }
+    if (!form.shopLogo) {
+      setError("Shop logo is required");
+      return;
+    }
 
     setLoading(true);
     setError("");
@@ -61,6 +67,8 @@ export default function CreateShopPage() {
           password: form.password,
           shopName: form.shopName,
           shopSlug: form.shopSlug || slugify(form.shopName),
+          shopLogo: form.shopLogo,
+          shopDescription: form.shopDescription,
         }),
       });
 
@@ -71,7 +79,7 @@ export default function CreateShopPage() {
       }
 
       setResult(data);
-      setStep(3);
+      setStep(4);
     } catch {
       setError("Network error. Please try again.");
     } finally {
@@ -102,7 +110,7 @@ export default function CreateShopPage() {
           transition={{ duration: 0.5 }}
           className="w-full max-w-lg"
         >
-          {step === 3 && result ? (
+          {step === 4 && result ? (
             <div className="rounded-2xl border border-white/10 bg-white/5 p-8 text-center">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-500/20 text-3xl">
                 ✓
@@ -124,6 +132,12 @@ export default function CreateShopPage() {
                   Visit Your Shop
                 </Link>
                 <Link
+                  href={`/s/${result.tenant.slug}/dashboard`}
+                  className="rounded-xl border border-white/10 px-6 py-3 text-sm font-semibold text-white/60 transition-all hover:border-white/30 hover:text-white"
+                >
+                  Go to Dashboard
+                </Link>
+                <Link
                   href="/"
                   className="text-sm text-white/40 transition-colors hover:text-white/60"
                 >
@@ -142,7 +156,7 @@ export default function CreateShopPage() {
 
               {/* Progress */}
               <div className="mt-6 flex items-center gap-2">
-                {[1, 2].map((s) => (
+                {[1, 2, 3].map((s) => (
                   <div
                     key={s}
                     className={`h-1.5 flex-1 rounded-full transition-colors ${
@@ -258,10 +272,89 @@ export default function CreateShopPage() {
                       </span>
                     </div>
                   </div>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-white/50">
+                      Description (optional)
+                    </label>
+                    <textarea
+                      value={form.shopDescription}
+                      onChange={(e) => updateField("shopDescription", e.target.value)}
+                      rows={3}
+                      className="w-full resize-none rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition-colors placeholder:text-white/30 focus:border-white/30"
+                      placeholder="Describe your shop in a few words..."
+                    />
+                  </div>
                   <div className="flex gap-3">
                     <button
                       type="button"
                       onClick={() => setStep(1)}
+                      className="flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-white/60 transition-colors hover:border-white/30"
+                    >
+                      Back
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!form.shopName) {
+                          setError("Shop name is required");
+                          return;
+                        }
+                        setError("");
+                        setStep(3);
+                      }}
+                      className="flex-1 rounded-xl bg-gradient-to-r from-purple-500 to-pink-500 py-3 text-sm font-bold transition-all hover:opacity-90"
+                    >
+                      Continue
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+
+              {step === 3 && (
+                <motion.div
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  className="mt-6 space-y-4"
+                >
+                  <h3 className="text-sm font-semibold text-white/80">
+                    Shop Logo
+                  </h3>
+                  <div>
+                    <label className="mb-1.5 block text-xs font-medium text-white/50">
+                      Logo URL
+                    </label>
+                    <input
+                      type="url"
+                      value={form.shopLogo}
+                      onChange={(e) => updateField("shopLogo", e.target.value)}
+                      className="w-full rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm outline-none transition-colors placeholder:text-white/30 focus:border-white/30"
+                      placeholder="https://example.com/logo.png"
+                    />
+                    <p className="mt-1.5 text-xs text-white/30">
+                      Paste a direct link to your logo image (PNG, JPG, WebP)
+                    </p>
+                  </div>
+                  {form.shopLogo && (
+                    <div className="flex items-center gap-4 rounded-xl border border-white/10 bg-white/5 p-4">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={form.shopLogo}
+                        alt="Logo preview"
+                        className="h-16 w-16 rounded-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).style.display = "none";
+                        }}
+                      />
+                      <div>
+                        <p className="text-sm font-semibold text-white/80">{form.shopName}</p>
+                        <p className="text-xs text-white/40">Logo preview</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setStep(2)}
                       className="flex-1 rounded-xl border border-white/10 py-3 text-sm font-medium text-white/60 transition-colors hover:border-white/30"
                     >
                       Back

@@ -51,7 +51,7 @@ const STORAGE_KEY = "hm_site_theme";
 
 interface ThemeContextValue {
   theme: ThemeId;
-  setTheme: (id: ThemeId) => void;
+  setTheme: (id: ThemeId, persist?: boolean) => void;
   themes: typeof THEMES;
 }
 
@@ -90,13 +90,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const setTheme = useCallback((id: ThemeId) => {
+  const setTheme = useCallback((id: ThemeId, persist = true) => {
     setThemeState(id);
     applyTheme(id);
-    try {
-      localStorage.setItem(STORAGE_KEY, id);
-    } catch {
-      // ignore persistence failures
+    if (persist) {
+      try {
+        localStorage.setItem(STORAGE_KEY, id);
+      } catch {
+        // ignore persistence failures
+      }
     }
   }, []);
 

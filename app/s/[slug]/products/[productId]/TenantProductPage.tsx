@@ -45,10 +45,15 @@ interface ProductData {
 }
 
 function ThemeApplier({ theme }: { theme: string }) {
-  const { setTheme } = useTheme();
+  const { setTheme, theme: currentTheme } = useTheme();
   useEffect(() => {
-    setTheme(theme === "heaven" ? "heaven" : "hyper");
-  }, [theme, setTheme]);
+    const originalTheme = currentTheme;
+    setTheme(theme === "heaven" ? "heaven" : "hyper", false);
+    return () => {
+      setTheme(originalTheme, false);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   return null;
 }
 
