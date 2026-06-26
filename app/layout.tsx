@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { LocaleProvider } from "@/lib/contexts/LocaleContext";
+import { ThemeProvider } from "@/lib/contexts/ThemeContext";
 import { CartProvider } from "@/lib/hooks/useCart";
 import "./globals.css";
 
@@ -39,11 +40,13 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
-        <AuthProvider>
-          <LocaleProvider>
-            <CartProvider>{children}</CartProvider>
-          </LocaleProvider>
-        </AuthProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <LocaleProvider>
+              <CartProvider>{children}</CartProvider>
+            </LocaleProvider>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );
