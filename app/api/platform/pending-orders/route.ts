@@ -1,7 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { tenantOrders, tenants } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { eq, and, gte } from "drizzle-orm";
+import { checkPlatformHeader } from "@/lib/platform/auth";
+import { decryptSecret } from "@/lib/crypto/secrets";
+import { serverError } from "@/lib/http";
+
+// Orders older than this with no payment are considered expired and dropped
+// from the watch list (the price quote is stale by then).
+const ORDER_TTL_MS = 1000 * 60 * 30; // 30 minutes
 
 /**
  * Bot-facing endpoint. Returns all pending tenant orders together with the
@@ -13,11 +20,12 @@ import { eq } from "drizzle-orm";
  * Protected by PLATFORM_SECRET — never expose this publicly.
  */
 export async function GET(req: Request) {
-  if (req.headers.get("x-platform-secret") !== process.env.PLATFORM_SECRET) {
+  if (!checkPlatformHeader(req)) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   try {
+    const cutoff = new Date(Date.now() - ORDER_TTL_MS);
     const rows = await db
       .select({
         orderId: tenantOrders.id,
@@ -37,14 +45,24 @@ export async function GET(req: Request) {
       })
       .from(tenantOrders)
       .innerJoin(tenants, eq(tenantOrders.tenantId, tenants.id))
-      .where(eq(tenantOrders.status, "pending"));
+      .where(
+        and(
+          eq(tenantOrders.status, "pending"),
+          gte(tenantOrders.createdAt, cutoff)
+        )
+      );
+
+    // Decrypt the temp-wallet keys only here, for the trusted bot caller.
+    const orders = rows.map((r) => ({
+      ...r,
+      payPrivateKey: decryptSecret(r.payPrivateKey),
+    }));
 
     return NextResponse.json({
       platformLtcAddress: process.env.PLATFORM_LTC_ADDRESS ?? null,
-      orders: rows,
+      orders,
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("platform/pending-orders", e);
   }
 }

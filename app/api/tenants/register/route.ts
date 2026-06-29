@@ -2,16 +2,11 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, tenants } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { createHash, randomBytes } from "crypto";
+import { randomBytes } from "crypto";
 import { generateWallet } from "@/lib/crypto/wallet";
-
-function hashPassword(password: string): string {
-  const salt = randomBytes(16).toString("hex");
-  const hash = createHash("sha256")
-    .update(salt + password)
-    .digest("hex");
-  return `${salt}:${hash}`;
-}
+import { encryptSecret } from "@/lib/crypto/secrets";
+import { hashPassword } from "@/lib/auth/password";
+import { serverError } from "@/lib/http";
 
 function slugify(name: string): string {
   return name
@@ -79,29 +74,35 @@ export async function POST(req: Request) {
       generateWallet("btc"),
     ]);
 
-    const [user] = await db
-      .insert(users)
-      .values({
-        email: email.toLowerCase(),
-        username: resolvedUsername,
-        passwordHash: hashPassword(password),
-      })
-      .returning();
+    // Insert user + tenant in one transaction so a failure can't leave an
+    // orphan user that blocks re-registration with the same email.
+    const { user, tenant } = await db.transaction(async (tx) => {
+      const [u] = await tx
+        .insert(users)
+        .values({
+          email: email.toLowerCase(),
+          username: resolvedUsername,
+          passwordHash: hashPassword(password),
+        })
+        .returning();
 
-    const [tenant] = await db
-      .insert(tenants)
-      .values({
-        slug,
-        name: shopName,
-        ownerId: user.id,
-        logo: shopLogo || null,
-        description: shopDescription || "",
-        ltcAddress: ltcWallet?.address || null,
-        ltcPrivateKey: ltcWallet?.privateKey || null,
-        btcAddress: btcWallet?.address || null,
-        btcPrivateKey: btcWallet?.privateKey || null,
-      })
-      .returning();
+      const [t] = await tx
+        .insert(tenants)
+        .values({
+          slug,
+          name: shopName,
+          ownerId: u.id,
+          logo: shopLogo || null,
+          description: shopDescription || "",
+          ltcAddress: ltcWallet?.address || null,
+          ltcPrivateKey: ltcWallet ? encryptSecret(ltcWallet.privateKey) : null,
+          btcAddress: btcWallet?.address || null,
+          btcPrivateKey: btcWallet ? encryptSecret(btcWallet.privateKey) : null,
+        })
+        .returning();
+
+      return { user: u, tenant: t };
+    });
 
     return NextResponse.json({
       user: { id: user.id, email: user.email, username: user.username },
@@ -110,9 +111,9 @@ export async function POST(req: Request) {
         slug: tenant.slug,
         name: tenant.name,
       },
+      walletReady: !!ltcWallet,
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/register", e);
   }
 }

@@ -36,6 +36,8 @@ export default async function Page({
 }) {
   const { slug, productId } = await params;
 
+  let tenant;
+  let product;
   try {
     const tenantRows = await db
       .select()
@@ -44,7 +46,7 @@ export default async function Page({
       .limit(1);
 
     if (tenantRows.length === 0 || !tenantRows[0].active) return notFound();
-    const tenant = tenantRows[0];
+    tenant = tenantRows[0];
 
     const productRows = await db
       .select()
@@ -59,9 +61,12 @@ export default async function Page({
       .limit(1);
 
     if (productRows.length === 0) return notFound();
-    const product = productRows[0];
+    product = productRows[0];
+  } catch {
+    return notFound();
+  }
 
-    const tenantConfig = {
+  const tenantConfig = {
       id: tenant.id,
       slug: tenant.slug,
       name: tenant.name,
@@ -70,7 +75,6 @@ export default async function Page({
       theme: tenant.theme,
       accentColor: tenant.accentColor,
       discordInvite: tenant.discordInvite ?? "",
-      ltcAddress: tenant.ltcAddress,
     };
 
     const productData = {
@@ -85,18 +89,23 @@ export default async function Page({
       image: product.image,
       images: (product.images as string[] | null) ?? [],
       instructions: product.instructions,
-      variants: product.variants as Array<{
-        id: string;
-        title: string;
-        price: number;
-        stock: number;
-      }> | null,
+      // Strip stockItems (unsold serial keys) — a cast alone keeps them at runtime.
+      variants:
+        (product.variants as Array<{
+          id: string;
+          title: string;
+          price: number;
+          stock: number;
+          stockItems?: string[];
+        }> | null)?.map((v) => ({
+          id: v.id,
+          title: v.title,
+          price: v.price,
+          stock: v.stock,
+        })) ?? null,
       deliverableType: product.deliverableType,
       totalSold: product.totalSold,
     };
 
-    return <TenantProductPage tenant={tenantConfig} product={productData} />;
-  } catch {
-    return notFound();
-  }
+  return <TenantProductPage tenant={tenantConfig} product={productData} />;
 }

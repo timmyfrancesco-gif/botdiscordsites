@@ -19,7 +19,6 @@ interface TenantConfig {
   theme: string;
   accentColor: string | null;
   discordInvite: string;
-  ltcAddress: string | null;
 }
 
 interface ProductData {

@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { tenants, tenantProducts, tenantOrders } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gt, sql } from "drizzle-orm";
 import { generateWallet, getLtcPriceEur } from "@/lib/crypto/wallet";
+import { encryptSecret } from "@/lib/crypto/secrets";
+import { serverError } from "@/lib/http";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+type Variant = { id: string; title: string; price: number; stock: number; stockItems?: string[] };
 
 export async function POST(
   req: Request,
@@ -20,7 +24,7 @@ export async function POST(
       email?: string;
     };
 
-    if (!productId || !email || !EMAIL_RE.test(email)) {
+    if (!productId || !email || !EMAIL_RE.test(email) || email.length > 254) {
       return NextResponse.json(
         { error: "productId and a valid email are required" },
         { status: 400 }
@@ -67,7 +71,7 @@ export async function POST(
     // Resolve price (variant overrides product price)
     let amountEur = product.price;
     if (variantId) {
-      const variant = product.variants?.find((v) => v.id === variantId);
+      const variant = (product.variants as Variant[] | null)?.find((v) => v.id === variantId);
       if (!variant) {
         return NextResponse.json({ error: "variant not found" }, { status: 404 });
       }
@@ -84,42 +88,126 @@ export async function POST(
     const amountLtc = Number((amountEur / ltcPrice).toFixed(8));
     const feeEur = Number((amountEur * (tenant.feePct / 100)).toFixed(2));
 
-    // Temporary wallet that receives this payment
-    const payWallet = await generateWallet("ltc");
-    if (!payWallet) {
-      return NextResponse.json(
-        { error: "could not create payment wallet, try again" },
-        { status: 503 }
-      );
+    // Atomically reserve one unit of stock so finite digital goods can't oversell.
+    const reserved = await reserveStock(tenantId, productId, variantId);
+    if (!reserved) {
+      return NextResponse.json({ error: "out of stock" }, { status: 409 });
     }
 
-    const [order] = await db
-      .insert(tenantOrders)
-      .values({
-        tenantId,
-        productId,
-        variantId: variantId ?? null,
-        buyerEmail: email,
-        amountEur,
-        amountLtc,
-        feePct: tenant.feePct,
-        feeEur,
-        ltcAddress: payWallet.address,
-        payPrivateKey: payWallet.privateKey,
-        payoutAddress: tenant.ltcAddress,
-        status: "pending",
-      })
-      .returning();
+    // From here, if anything fails we must release the reserved unit.
+    try {
+      const payWallet = await generateWallet("ltc");
+      if (!payWallet) {
+        await releaseStock(tenantId, productId, variantId);
+        return NextResponse.json(
+          { error: "could not create payment wallet, try again" },
+          { status: 503 }
+        );
+      }
 
-    return NextResponse.json({
-      orderId: order.id,
-      address: order.ltcAddress,
-      amountLtc: order.amountLtc,
-      amountEur: order.amountEur,
-      status: order.status,
-    });
+      const [order] = await db
+        .insert(tenantOrders)
+        .values({
+          tenantId,
+          productId,
+          variantId: variantId ?? null,
+          buyerEmail: email,
+          amountEur,
+          amountLtc,
+          feePct: tenant.feePct,
+          feeEur,
+          ltcAddress: payWallet.address,
+          payPrivateKey: encryptSecret(payWallet.privateKey),
+          payoutAddress: tenant.ltcAddress,
+          status: "pending",
+        })
+        .returning();
+
+      return NextResponse.json({
+        orderId: order.id,
+        address: order.ltcAddress,
+        amountLtc: order.amountLtc,
+        amountEur: order.amountEur,
+        status: order.status,
+      });
+    } catch (e) {
+      await releaseStock(tenantId, productId, variantId);
+      throw e;
+    }
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/orders POST", e);
   }
+}
+
+/** Atomically decrement one unit of stock. Returns false if none available. */
+async function reserveStock(
+  tenantId: string,
+  productId: string,
+  variantId?: string
+): Promise<boolean> {
+  if (!variantId) {
+    const rows = await db
+      .update(tenantProducts)
+      .set({ stock: sql`${tenantProducts.stock} - 1`, updatedAt: new Date() })
+      .where(
+        and(
+          eq(tenantProducts.id, productId),
+          eq(tenantProducts.tenantId, tenantId),
+          gt(tenantProducts.stock, 0)
+        )
+      )
+      .returning({ id: tenantProducts.id });
+    return rows.length > 0;
+  }
+
+  return db.transaction(async (tx) => {
+    const [p] = await tx
+      .select()
+      .from(tenantProducts)
+      .where(eq(tenantProducts.id, productId))
+      .for("update")
+      .limit(1);
+    if (!p) return false;
+    const variants = (p.variants as Variant[] | null) ?? [];
+    const idx = variants.findIndex((v) => v.id === variantId);
+    if (idx === -1 || variants[idx].stock <= 0) return false;
+    variants[idx] = { ...variants[idx], stock: variants[idx].stock - 1 };
+    await tx
+      .update(tenantProducts)
+      .set({ variants, updatedAt: new Date() })
+      .where(eq(tenantProducts.id, productId));
+    return true;
+  });
+}
+
+/** Restore one unit of stock (reservation rollback or order expiry). */
+async function releaseStock(
+  tenantId: string,
+  productId: string,
+  variantId?: string
+): Promise<void> {
+  if (!variantId) {
+    await db
+      .update(tenantProducts)
+      .set({ stock: sql`${tenantProducts.stock} + 1`, updatedAt: new Date() })
+      .where(and(eq(tenantProducts.id, productId), eq(tenantProducts.tenantId, tenantId)));
+    return;
+  }
+  await db.transaction(async (tx) => {
+    const [p] = await tx
+      .select()
+      .from(tenantProducts)
+      .where(eq(tenantProducts.id, productId))
+      .for("update")
+      .limit(1);
+    if (!p) return;
+    const variants = (p.variants as Variant[] | null) ?? [];
+    const idx = variants.findIndex((v) => v.id === variantId);
+    if (idx === -1) return;
+    variants[idx] = { ...variants[idx], stock: variants[idx].stock + 1 };
+    await tx
+      .update(tenantProducts)
+      .set({ variants, updatedAt: new Date() })
+      .where(eq(tenantProducts.id, productId));
+  });
 }

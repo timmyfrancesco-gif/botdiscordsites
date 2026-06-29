@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { tenants } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
+import { serverError } from "@/lib/http";
 
 export async function GET(
   _req: Request,
@@ -22,7 +23,6 @@ export async function GET(
 
     return NextResponse.json(rows[0]);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/by-slug", e);
   }
 }

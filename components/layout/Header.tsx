@@ -4,10 +4,10 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import LocaleSelector from "@/components/ui/LocaleSelector";
-import { SITE } from "@/lib/config";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useSiteConfig } from "@/lib/contexts/SiteConfigContext";
+import { safeExternalUrl } from "@/lib/safeUrl";
 
 const NAV_KEYS = [
   { href: "/#top", key: "nav.home", tenantVisible: true },
@@ -165,7 +165,7 @@ export default function Header() {
           <LocaleSelector />
           <UserMenu />
           <a
-            href={site.discordInvite}
+            href={safeExternalUrl(site.discordInvite)}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
@@ -271,7 +271,7 @@ export default function Header() {
               </Link>
             )}
             <a
-              href={site.discordInvite}
+              href={safeExternalUrl(site.discordInvite)}
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-full border border-border px-4 py-2 text-center text-sm font-semibold text-foreground"

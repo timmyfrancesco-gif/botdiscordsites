@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { tenantProducts, tenants } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { verifySession, readSessionCookie } from "@/lib/tenant/session";
+import { serverError } from "@/lib/http";
 
 export async function GET(
   req: Request,
@@ -32,7 +33,6 @@ export async function GET(
 
     return NextResponse.json({ products });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/products", e);
   }
 }

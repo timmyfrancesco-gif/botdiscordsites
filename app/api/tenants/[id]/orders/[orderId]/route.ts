@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { tenantOrders } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
+import { serverError } from "@/lib/http";
 
 // Public order-status endpoint used by the buyer's checkout to poll for
 // payment. Returns only non-sensitive fields (never the private key).
@@ -35,7 +36,6 @@ export async function GET(
 
     return NextResponse.json(rows[0]);
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/orders status", e);
   }
 }

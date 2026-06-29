@@ -71,7 +71,6 @@ export default async function TenantPage({
     theme: tenant.theme,
     accentColor: tenant.accentColor,
     discordInvite: tenant.discordInvite ?? "",
-    ltcAddress: tenant.ltcAddress,
   };
 
   const shopProducts = products.map((p) => ({
@@ -87,13 +86,20 @@ export default async function TenantPage({
     image: p.image,
     images: (p.images as string[] | null) ?? [],
     instructions: p.instructions,
-    variants: p.variants as Array<{
-      id: string;
-      title: string;
-      price: number;
-      stock: number;
-      stockItems?: string[];
-    }> | null,
+    // Strip stockItems (unsold serial keys) — they must never reach the client.
+    variants:
+      (p.variants as Array<{
+        id: string;
+        title: string;
+        price: number;
+        stock: number;
+        stockItems?: string[];
+      }> | null)?.map((v) => ({
+        id: v.id,
+        title: v.title,
+        price: v.price,
+        stock: v.stock,
+      })) ?? null,
     deliverableType: p.deliverableType,
     totalSold: p.totalSold,
   }));

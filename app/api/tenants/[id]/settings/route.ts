@@ -3,6 +3,79 @@ import { db } from "@/lib/db";
 import { tenants } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { verifySession, readSessionCookie } from "@/lib/tenant/session";
+import { serverError } from "@/lib/http";
+
+const LTC_ADDRESS_RE = /^([LM3][a-km-zA-HJ-NP-Z1-9]{25,39}|ltc1[a-z0-9]{20,90})$/;
+const THEMES = new Set(["heaven", "hyper"]);
+const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
+
+/**
+ * Validates and normalizes a settings patch. Returns either the sanitized
+ * column updates or an error message. Any invalid field rejects the request.
+ */
+function validateSettings(
+  body: Record<string, unknown>
+): { updates: Record<string, unknown> } | { error: string } {
+  const updates: Record<string, unknown> = {};
+
+  const asString = (v: unknown) => (typeof v === "string" ? v : null);
+
+  if ("name" in body) {
+    const v = asString(body.name)?.trim();
+    if (!v || v.length > 120) return { error: "invalid name" };
+    updates.name = v;
+  }
+  if ("description" in body) {
+    const v = asString(body.description);
+    if (v === null || v.length > 2000) return { error: "invalid description" };
+    updates.description = v;
+  }
+  if ("logo" in body) {
+    const v = asString(body.logo);
+    if (v === null) return { error: "invalid logo" };
+    if (v !== "") {
+      try {
+        const u = new URL(v);
+        if (u.protocol !== "https:" || v.length > 2048) throw new Error();
+      } catch {
+        return { error: "logo must be a valid https URL" };
+      }
+    }
+    updates.logo = v || null;
+  }
+  if ("discordInvite" in body) {
+    const v = asString(body.discordInvite);
+    if (v === null) return { error: "invalid discord invite" };
+    if (v !== "") {
+      try {
+        const u = new URL(v);
+        if (u.protocol !== "https:" || v.length > 2048) throw new Error();
+      } catch {
+        return { error: "discord invite must be a valid https URL" };
+      }
+    }
+    updates.discordInvite = v || null;
+  }
+  if ("theme" in body) {
+    const v = asString(body.theme);
+    if (!v || !THEMES.has(v)) return { error: "invalid theme" };
+    updates.theme = v;
+  }
+  if ("accentColor" in body) {
+    const v = asString(body.accentColor);
+    if (!v || !HEX_COLOR_RE.test(v)) return { error: "invalid accent color" };
+    updates.accentColor = v;
+  }
+  if ("ltcAddress" in body) {
+    const v = asString(body.ltcAddress)?.trim();
+    if (!v || !LTC_ADDRESS_RE.test(v)) {
+      return { error: "invalid Litecoin address" };
+    }
+    updates.ltcAddress = v;
+  }
+
+  return { updates };
+}
 
 export async function GET(
   req: Request,
@@ -35,8 +108,7 @@ export async function GET(
       active: tenant.active,
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/settings GET", e);
   }
 }
 
@@ -57,29 +129,19 @@ export async function PUT(
       return NextResponse.json({ error: "unauthorized" }, { status: 401 });
     }
 
-    const body = await req.json();
-    const allowedFields: Record<string, string> = {
-      name: "name",
-      description: "description",
-      logo: "logo",
-      theme: "theme",
-      accentColor: "accentColor",
-      discordInvite: "discordInvite",
-      ltcAddress: "ltcAddress",
-    };
-
-    const updates: Record<string, unknown> = { updatedAt: new Date() };
-    for (const [key, col] of Object.entries(allowedFields)) {
-      if (key in body) {
-        updates[col] = body[key];
-      }
+    const body = (await req.json()) as Record<string, unknown>;
+    const result = validateSettings(body);
+    if ("error" in result) {
+      return NextResponse.json({ error: result.error }, { status: 400 });
     }
 
-    await db.update(tenants).set(updates).where(eq(tenants.id, tenantId));
+    await db
+      .update(tenants)
+      .set({ ...result.updates, updatedAt: new Date() })
+      .where(eq(tenants.id, tenantId));
 
     return NextResponse.json({ ok: true });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/settings PUT", e);
   }
 }

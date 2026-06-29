@@ -8,7 +8,7 @@ import Faq from "@/components/sections/Faq";
 import { HomepageDataProvider } from "@/lib/contexts/HomepageDataContext";
 import { SiteConfigProvider, type SiteConfig } from "@/lib/contexts/SiteConfigContext";
 import { useTheme } from "@/lib/contexts/ThemeContext";
-import type { ShopItem, ProductsResponse, ApiProduct } from "@/lib/types";
+import type { ProductsResponse, ApiProduct } from "@/lib/types";
 
 interface TenantConfig {
   id: string;
@@ -19,7 +19,6 @@ interface TenantConfig {
   theme: string;
   accentColor: string | null;
   discordInvite: string;
-  ltcAddress: string | null;
 }
 
 interface TenantProduct {
@@ -40,7 +39,6 @@ interface TenantProduct {
     title: string;
     price: number;
     stock: number;
-    stockItems?: string[];
   }> | null;
   deliverableType?: string | null;
   totalSold: number;
@@ -95,24 +93,6 @@ export default function TenantShell({
   }));
 
   const productsResponse: ProductsResponse = { products: apiProducts };
-
-  const shopItems: ShopItem[] = products.map((p) => ({
-    id: p.id,
-    name: p.name,
-    category: p.category,
-    price: p.price,
-    comparePrice: p.comparePrice ?? undefined,
-    currency: p.currency,
-    stock: p.stock,
-    description: p.description,
-    icon: p.icon,
-    image: p.image ?? undefined,
-    images: p.images,
-    instructions: p.instructions ?? undefined,
-    variants: p.variants ?? undefined,
-    deliverableType: (p.deliverableType as ShopItem["deliverableType"]) ?? undefined,
-    totalSold: p.totalSold,
-  }));
 
   return (
     <SiteConfigProvider config={siteConfig}>

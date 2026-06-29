@@ -2,17 +2,15 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { users, tenants } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { createHash } from "crypto";
-import { signSession } from "@/lib/tenant/session";
+import { signSession, SESSION_TTL_MS } from "@/lib/tenant/session";
+import { verifyPassword, hashPassword, needsRehash } from "@/lib/auth/password";
+import { serverError } from "@/lib/http";
 
-function verifyPassword(stored: string, input: string): boolean {
-  const [salt, hash] = stored.split(":");
-  if (!salt || !hash) return false;
-  const inputHash = createHash("sha256")
-    .update(salt + input)
-    .digest("hex");
-  return hash === inputHash;
-}
+// A valid-looking scrypt hash for a random password, used to equalize timing
+// when the user/tenant doesn't exist so login can't be used as an oracle.
+const DUMMY_HASH =
+  "scrypt$16384$8$1$00000000000000000000000000000000$" +
+  "0".repeat(128);
 
 export async function POST(
   req: Request,
@@ -36,26 +34,39 @@ export async function POST(
       .from(tenants)
       .where(eq(tenants.id, tenantId))
       .limit(1);
-    if (tenantRows.length === 0) {
-      return NextResponse.json({ error: "not found" }, { status: 404 });
-    }
+    const tenant = tenantRows[0];
 
     const userRows = await db
       .select()
       .from(users)
       .where(eq(users.email, email.toLowerCase()))
       .limit(1);
-    if (userRows.length === 0) {
-      return NextResponse.json({ error: "invalid credentials" }, { status: 401 });
-    }
-
     const user = userRows[0];
-    if (!verifyPassword(user.passwordHash, password)) {
-      return NextResponse.json({ error: "invalid credentials" }, { status: 401 });
+
+    // Always run a hash to flatten timing whether or not the account exists.
+    const passwordOk = verifyPassword(user?.passwordHash ?? DUMMY_HASH, password);
+
+    const authorized = Boolean(
+      tenant && user && passwordOk && tenant.ownerId === user.id
+    );
+    if (!authorized || !tenant || !user) {
+      // Single uniform failure — never reveal which check failed.
+      return NextResponse.json(
+        { error: "invalid credentials" },
+        { status: 401 }
+      );
     }
 
-    if (tenantRows[0].ownerId !== user.id) {
-      return NextResponse.json({ error: "not authorized" }, { status: 403 });
+    // Transparently migrate legacy SHA-256 hashes to scrypt on successful login.
+    if (needsRehash(user.passwordHash)) {
+      try {
+        await db
+          .update(users)
+          .set({ passwordHash: hashPassword(password) })
+          .where(eq(users.id, user.id));
+      } catch {
+        // non-fatal: migration can retry next login
+      }
     }
 
     let sessionToken: string;
@@ -78,12 +89,11 @@ export async function POST(
       secure: true,
       sameSite: "lax",
       path: "/",
-      maxAge: 60 * 60 * 24,
+      maxAge: Math.floor(SESSION_TTL_MS / 1000),
     });
 
     return response;
   } catch (e) {
-    const msg = e instanceof Error ? e.message : "unknown error";
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return serverError("tenants/login", e);
   }
 }

@@ -2,9 +2,9 @@
 
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
-import { SITE } from "@/lib/config";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useSiteConfig } from "@/lib/contexts/SiteConfigContext";
+import { safeExternalUrl } from "@/lib/safeUrl";
 
 export default function Footer() {
   const { t } = useLocale();
@@ -30,7 +30,7 @@ export default function Footer() {
             </p>
             <div className="mt-5 flex gap-3">
               <a
-                href={site.discordInvite}
+                href={safeExternalUrl(site.discordInvite)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 rounded-full bg-[#5865F2] px-5 py-2 text-xs font-bold text-white transition-opacity hover:opacity-90"
