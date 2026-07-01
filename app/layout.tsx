@@ -17,11 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Astro Exchange — Crypto Escrow, Middleman & Exchange on Discord",
+  title: "Dshop — Crypto Escrow, Middleman & Exchange on Discord",
   description:
-    "Astro Exchange is a Discord-based crypto trading hub offering escrow, middleman services, exchange, advertising slots, a digital shop and a casino.",
+    "Dshop is a Discord-based crypto trading hub offering escrow, middleman services, exchange, advertising slots, a digital shop and a casino.",
   openGraph: {
-    title: "Astro Exchange",
+    title: "Dshop",
     description:
       "Crypto escrow, middleman, exchange, casino and more — all on Discord.",
     type: "website",

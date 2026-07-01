@@ -73,7 +73,7 @@ export function HomepageDataProvider({
   initialData?: HomepageInitialData;
   /**
    * When true, the provider never polls /api/cache/homepage (the main
-   * Heaven Market data source). Used by tenant shops so their products
+   * Dshop data source). Used by tenant shops so their products
    * and feed are never overwritten by main-site data.
    */
   staticData?: boolean;

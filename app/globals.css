@@ -7,11 +7,11 @@
   --muted: #9c93b5;
   --border: #241c38;
 
-  --accent: #a855f7;
-  --accent-soft: #a855f71a;
+  --accent: #90C6FF;
+  --accent-soft: #90C6FF1a;
 
-  --casino-from: #c084fc;
-  --casino-to: #ec4899;
+  --casino-from: #60aaff;
+  --casino-to: #38bdf8;
 }
 
 @theme inline {

@@ -824,7 +824,7 @@ function AdminPanel() {
             <span className="text-sm font-bold text-indigo-400">HM</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-white">Heaven Market</span>
+            <span className="text-sm font-bold text-white">Dshop</span>
             <span className="text-[10px] text-zinc-500">Admin Panel</span>
           </div>
           <button
@@ -2869,7 +2869,7 @@ type StorefrontConfig = {
 };
 
 const DEFAULT_STOREFRONT_CONFIG: StorefrontConfig = {
-  storeName: "Heaven Market",
+  storeName: "Dshop",
   logoUrl: "",
   description: "",
   discordInvite: "",

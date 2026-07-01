@@ -206,7 +206,7 @@ function wrapPage(
       </div>
     </div>
   </div>
-  <div class="footer">Heaven Market &mdash; Transcript Archive</div>
+  <div class="footer">Dshop &mdash; Transcript Archive</div>
 </body>
 </html>`;
 }

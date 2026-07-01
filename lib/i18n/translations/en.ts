@@ -198,7 +198,7 @@ const en: Record<string, string> = {
   "auth.login": "Login",
   "auth.register": "Register",
   "auth.logout": "Logout",
-  "auth.loginSubtitle": "Welcome back to Heaven Market",
+  "auth.loginSubtitle": "Welcome back to Dshop",
   "auth.registerSubtitle": "Create your account",
   "auth.emailPlaceholder": "Email address",
   "auth.passwordPlaceholder": "Password",
