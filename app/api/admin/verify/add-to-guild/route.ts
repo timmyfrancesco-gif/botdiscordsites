@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
   // Refresh token if expired or close to expiry (within 60s)
   const expired = record.tokenExpiresAt && record.tokenExpiresAt.getTime() < Date.now() + 60_000
   if (expired && record.refreshToken) {
-    const plainRefresh = decryptSecret(record.refreshToken)
+    const plainRefresh = decryptSecret(record.refreshToken) ?? ""
     const refreshed = await refreshAccessToken(plainRefresh)
     if (refreshed) {
       accessToken = refreshed.access_token
