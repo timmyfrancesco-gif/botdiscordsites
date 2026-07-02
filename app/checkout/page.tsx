@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import LtcPayment from "@/components/shop/LtcPayment";
+import PaypalPayment from "@/components/shop/PaypalPayment";
 import { createProductOrder, isApiConfigured, submitReview } from "@/lib/api";
 import { useCart } from "@/lib/hooks/useCart";
 import { useLocale } from "@/lib/hooks/useLocale";
@@ -94,11 +95,29 @@ function CheckoutContent() {
   const { items, loaded, refetch: refetchProducts } = useProducts();
   const cart = useCart();
 
+  // PayPal availability comes from the admin Configure page (site_config).
+  const [paypalEnabled, setPaypalEnabled] = useState(false);
+  useEffect(() => {
+    fetch("/api/admin/site-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const email = d?.config?.mainPaypalEmail;
+        setPaypalEnabled(typeof email === "string" && email.trim().length > 0);
+      })
+      .catch(() => {});
+  }, []);
+
   const paymentMethods = useMemo(() => [
     { id: "ltc", label: t("checkout.litecoin"), sub: t("checkout.viaLtcNetwork"), available: true, icon: PAYMENT_METHODS_ICONS.ltc },
     { id: "btc", label: t("checkout.bitcoin"), sub: t("checkout.comingSoon"), available: false, icon: PAYMENT_METHODS_ICONS.btc },
-    { id: "card", label: t("checkout.cardPaypal"), sub: t("checkout.comingSoon"), available: false, icon: PAYMENT_METHODS_ICONS.card },
-  ], [t]);
+    {
+      id: "paypal",
+      label: t("checkout.cardPaypal"),
+      sub: paypalEnabled ? "PayPal Friends & Family" : t("checkout.comingSoon"),
+      available: paypalEnabled,
+      icon: PAYMENT_METHODS_ICONS.card,
+    },
+  ], [t, paypalEnabled]);
 
   const buyNowProduct = productId ? items.find((item) => String(item.id) === productId) : null;
   const buyNowVariant = buyNowProduct && variantId
@@ -260,6 +279,7 @@ function CheckoutContent() {
       productId: currentItem.id,
       discord: email.trim(),
       ...(currentEntry.variantId ? { variantId: currentEntry.variantId } : {}),
+      method: paymentMethod === "paypal" ? "paypal" : "ltc",
     });
     setLoading(false);
 
@@ -442,7 +462,11 @@ function CheckoutContent() {
         </form>
       ) : order ? (
         <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
-          <LtcPayment order={order} cartTotal={queueTotal} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
+          {order.method === "paypal" ? (
+            <PaypalPayment order={order} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
+          ) : (
+            <LtcPayment order={order} cartTotal={queueTotal} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
+          )}
         </div>
       ) : null}
 

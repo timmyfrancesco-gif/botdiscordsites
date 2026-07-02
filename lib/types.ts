@@ -137,6 +137,7 @@ export interface ProductOrderRequest {
   productId: string;
   discord: string;
   variantId?: string;
+  method?: "ltc" | "paypal";
 }
 
 export interface ProductOrderResponse {
@@ -144,6 +145,10 @@ export interface ProductOrderResponse {
   address: string;
   amountEur: number;
   productName?: string;
+  // Present on PayPal (Friends & Family) orders returned by the bot.
+  method?: "ltc" | "paypal";
+  paypalEmail?: string;
+  paypalNote?: string;
 }
 
 export interface ProductOrderStatusResponse {

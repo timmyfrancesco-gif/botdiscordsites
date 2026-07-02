@@ -13,7 +13,10 @@ export interface StorefrontConfig {
   currency?: string;
   bannerText?: string;
   bannerEnabled?: boolean;
+  mainPaypalEmail?: string;
 }
+
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const HTTPS_URL = (v: string) => {
   try {
@@ -66,6 +69,13 @@ function sanitize(body: Record<string, unknown>): StorefrontConfig | { error: st
   if ("bannerEnabled" in body) {
     if (typeof body.bannerEnabled !== "boolean") return { error: "invalid bannerEnabled" };
     out.bannerEnabled = body.bannerEnabled;
+  }
+  if ("mainPaypalEmail" in body) {
+    const v = s(body.mainPaypalEmail)?.trim() ?? "";
+    if (v !== "" && (!EMAIL_RE.test(v) || v.length > 254)) {
+      return { error: "invalid PayPal email" };
+    }
+    out.mainPaypalEmail = v;
   }
   return out;
 }
