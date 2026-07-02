@@ -3191,11 +3191,135 @@ function StorefrontConfigureView({
               )}
             </div>
           </div>
+
+          <PaymentsSection showToast={showToast} inputClass={inputClass} />
         </div>
       </div>
     </div>
   );
 }
+
+function PaymentsSection({
+  showToast,
+  inputClass,
+}: {
+  showToast: (msg: string, ok: boolean) => void;
+  inputClass: string;
+}) {
+  interface ShopRow {
+    id: string;
+    slug: string;
+    name: string;
+    paypalEmail: string | null;
+    ltcAddress: string | null;
+  }
+  const [shops, setShops] = useState<ShopRow[]>([]);
+  const [selected, setSelected] = useState("");
+  const [paypalEmail, setPaypalEmail] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/tenants-paypal")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.tenants) {
+          setShops(d.tenants);
+          if (d.tenants.length > 0) {
+            setSelected(d.tenants[0].id);
+            setPaypalEmail(d.tenants[0].paypalEmail ?? "");
+          }
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+
+  function onSelect(id: string) {
+    setSelected(id);
+    const shop = shops.find((s) => s.id === id);
+    setPaypalEmail(shop?.paypalEmail ?? "");
+  }
+
+  async function save() {
+    if (!selected) return;
+    setSaving(true);
+    try {
+      const res = await fetch("/api/admin/tenants-paypal", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ tenantId: selected, paypalEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) {
+        setShops((prev) =>
+          prev.map((s) => (s.id === selected ? { ...s, paypalEmail: paypalEmail || null } : s))
+        );
+        showToast(paypalEmail ? "PayPal email saved" : "PayPal disabled for this shop", true);
+      } else {
+        showToast(data.error || "Failed to save", false);
+      }
+    } catch {
+      showToast("Network error", false);
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="rounded-xl border border-white/5 p-6" style={{ backgroundColor: "#121214" }}>
+      <h4 className="mb-1 text-sm font-semibold text-white">Payments — PayPal</h4>
+      <p className="mb-5 text-xs text-zinc-500">
+        Set the PayPal email (Friends &amp; Family) that receives payments for a shop.
+        Leave empty to accept only Litecoin.
+      </p>
+
+      {!loaded ? (
+        <p className="text-sm text-zinc-500">Loading shops…</p>
+      ) : shops.length === 0 ? (
+        <p className="text-sm text-zinc-500">No shops found. Create a shop first.</p>
+      ) : (
+        <div className="space-y-5">
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-zinc-400">Shop</label>
+            <select
+              value={selected}
+              onChange={(e) => onSelect(e.target.value)}
+              className={inputClass}
+              style={{ backgroundColor: "#161619" }}
+            >
+              {shops.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name} ({s.slug}){s.paypalEmail ? " — PayPal ✓" : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-xs font-semibold text-zinc-400">PayPal Email</label>
+            <input
+              type="email"
+              value={paypalEmail}
+              onChange={(e) => setPaypalEmail(e.target.value)}
+              placeholder="you@paypal-email.com"
+              className={`${inputClass} placeholder:text-zinc-600`}
+              style={{ backgroundColor: "#161619" }}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={save}
+            disabled={saving}
+            className="rounded-lg bg-[#90C6FF] px-6 py-2.5 text-sm font-bold text-black transition-all hover:opacity-90 disabled:opacity-50"
+          >
+            {saving ? "Saving…" : "Save PayPal Email"}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function ActivityLogsView({ feed }: { feed: FeedItem[] }) {
   const logs = feed.slice(0, 50);
   return (
