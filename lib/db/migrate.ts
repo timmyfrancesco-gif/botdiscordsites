@@ -152,6 +152,21 @@ export async function runMigrations() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS casino_wallets (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id TEXT NOT NULL,
+        chain TEXT NOT NULL,
+        address TEXT NOT NULL,
+        private_key TEXT,
+        credited_atomic TEXT NOT NULL DEFAULT '0',
+        created_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+    await client.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS casino_wallets_user_chain_idx ON casino_wallets (user_id, chain)
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS site_config (
         id INTEGER PRIMARY KEY DEFAULT 1,
         config JSONB NOT NULL DEFAULT '{}',

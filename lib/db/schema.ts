@@ -157,6 +157,23 @@ export const casinoBlackjack = pgTable("casino_blackjack", {
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
+// ── Casino: per-user crypto deposit addresses (persistent) ─────────
+export const casinoWallets = pgTable(
+  "casino_wallets",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    userId: text("user_id").notNull(),
+    chain: text("chain").notNull(), // btc | ltc | eth | doge | dash
+    address: text("address").notNull(),
+    privateKey: text("private_key"), // AES-256-GCM encrypted
+    // Total atomic units (satoshi/wei) already credited, as a decimal string,
+    // so re-checking the same address never double-credits a deposit.
+    creditedAtomic: text("credited_atomic").default("0").notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+  },
+  (t) => [uniqueIndex("casino_wallets_user_chain_idx").on(t.userId, t.chain)]
+);
+
 // ── Main site storefront config (single row) ───────────────────────
 export const siteConfig = pgTable("site_config", {
   id: integer("id").primaryKey().default(1),

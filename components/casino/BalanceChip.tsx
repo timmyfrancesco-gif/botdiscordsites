@@ -55,12 +55,19 @@ export default function BalanceChip({ compact = false }: { compact?: boolean }) 
             <p className="text-xl font-bold text-foreground">{balanceCents === null ? "…" : eur(balanceCents)}</p>
           </div>
           <div className="flex flex-col p-1.5">
+            <Link
+              href="/casino/wallet"
+              onClick={() => setOpen(false)}
+              className="rounded-lg px-3 py-2 text-sm font-semibold text-accent transition-colors hover:bg-background-elevated"
+            >
+              Deposita
+            </Link>
             {testMode && (
               <button
                 type="button"
                 onClick={topUp}
                 disabled={loading}
-                className="rounded-lg px-3 py-2 text-left text-sm font-semibold text-accent transition-colors hover:bg-background-elevated disabled:opacity-50"
+                className="rounded-lg px-3 py-2 text-left text-sm text-muted transition-colors hover:bg-background-elevated disabled:opacity-50"
               >
                 {loading ? "…" : "+ €100 (test)"}
               </button>

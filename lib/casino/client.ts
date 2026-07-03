@@ -61,7 +61,20 @@ export const casino = {
     }),
   bjState: () =>
     call<{ state: BlackjackView | null; balanceCents: number }>("/api/casino/blackjack/state"),
+  wallets: () => call<{ wallets: WalletView[] }>("/api/casino/wallets"),
+  checkDeposits: () =>
+    call<{ credited: { chain: string; eurCents: number }[]; balanceCents: number }>(
+      "/api/casino/deposits/check",
+      { method: "POST" }
+    ),
 };
+
+export interface WalletView {
+  chain: string;
+  address: string;
+  symbol: string;
+  label: string;
+}
 
 export interface CardView {
   rank: string;

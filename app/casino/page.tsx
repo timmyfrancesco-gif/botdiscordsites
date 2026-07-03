@@ -37,6 +37,16 @@ export default function CasinoHub() {
             <h1 className="text-3xl font-black text-foreground">Casino</h1>
             <p className="mt-1 text-sm text-muted">Giochi provably fair. Gioca responsabilmente.</p>
           </div>
+          <Link
+            href="/casino/wallet"
+            className="mb-4 flex items-center justify-between rounded-2xl border border-accent/30 bg-accent-soft px-6 py-4 transition-colors hover:bg-accent/15"
+          >
+            <div>
+              <p className="font-bold text-foreground">Deposita crypto</p>
+              <p className="text-sm text-muted">Ricarica il saldo con BTC, LTC, ETH e altre.</p>
+            </div>
+            <svg viewBox="0 0 24 24" className="h-6 w-6 text-accent" fill="none" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 5v14M5 12h14" /></svg>
+          </Link>
           <div className="grid gap-4 sm:grid-cols-2">
             {GAMES.map((g) => (
               <Link
