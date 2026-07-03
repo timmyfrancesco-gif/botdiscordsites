@@ -174,6 +174,31 @@ export const casinoWallets = pgTable(
   (t) => [uniqueIndex("casino_wallets_user_chain_idx").on(t.userId, t.chain)]
 );
 
+// ── Casino: football (soccer) bets ─────────────────────────────────
+export const footballBets = pgTable("football_bets", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  fixtureId: integer("fixture_id").notNull(),
+  league: text("league"),
+  home: text("home").notNull(),
+  away: text("away").notNull(),
+  kickoff: timestamp("kickoff"),
+  selection: text("selection").notNull(), // "home" | "draw" | "away"
+  odds: real("odds").notNull(), // decimal odds locked at bet time
+  stakeCents: integer("stake_cents").notNull(),
+  status: text("status").default("pending").notNull(), // pending | won | lost | void
+  payoutCents: integer("payout_cents").default(0).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  settledAt: timestamp("settled_at"),
+});
+
+// ── Casino: football data cache (respects API-Football's 100/day limit) ──
+export const footballCache = pgTable("football_cache", {
+  key: text("key").primaryKey(),
+  data: jsonb("data").$type<unknown>().notNull(),
+  fetchedAt: timestamp("fetched_at").defaultNow().notNull(),
+});
+
 // ── Main site storefront config (single row) ───────────────────────
 export const siteConfig = pgTable("site_config", {
   id: integer("id").primaryKey().default(1),

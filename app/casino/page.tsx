@@ -26,6 +26,15 @@ const GAMES = [
       <svg viewBox="0 0 24 24" className="h-8 w-8" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" /></svg>
     ),
   },
+  {
+    href: "/casino/football",
+    title: "Scommesse Calcio",
+    desc: "Quote reali su partite di calcio. 1X2.",
+    gradient: "from-emerald-500/20 to-teal-900/10",
+    icon: (
+      <svg viewBox="0 0 24 24" className="h-8 w-8" fill="none" stroke="currentColor" strokeWidth={2}><circle cx="12" cy="12" r="10" /><path strokeLinecap="round" strokeLinejoin="round" d="M12 7l3 2.2-1.1 3.5h-3.8L9 9.2z" /></svg>
+    ),
+  },
 ];
 
 export default function CasinoHub() {

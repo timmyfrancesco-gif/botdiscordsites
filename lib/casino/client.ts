@@ -67,7 +67,45 @@ export const casino = {
       "/api/casino/deposits/check",
       { method: "POST" }
     ),
+  footballMatches: () =>
+    call<{ matches: FootballMatch[]; configured: boolean }>("/api/casino/football/matches"),
+  footballBet: (fixtureId: number, selection: "home" | "draw" | "away", stakeCents: number) =>
+    call<{ bet: FootballBetSlip; balanceCents: number }>("/api/casino/football/bet", {
+      method: "POST",
+      body: JSON.stringify({ fixtureId, selection, stakeCents }),
+    }),
+  footballMyBets: () => call<{ bets: FootballBet[] }>("/api/casino/football/mybets"),
 };
+
+export interface FootballMatch {
+  fixtureId: number;
+  league: string;
+  home: string;
+  away: string;
+  kickoff: string;
+  status: string;
+  odds: { home: number; draw: number; away: number } | null;
+}
+export interface FootballBetSlip {
+  id: string;
+  home: string;
+  away: string;
+  selection: string;
+  odds: number;
+  stakeCents: number;
+  potentialCents: number;
+}
+export interface FootballBet {
+  id: string;
+  home: string;
+  away: string;
+  selection: string;
+  odds: number;
+  stakeCents: number;
+  status: string;
+  payoutCents: number;
+  kickoff: string | null;
+}
 
 export interface WalletView {
   chain: string;

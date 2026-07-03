@@ -167,6 +167,38 @@ export async function runMigrations() {
     `);
 
     await client.query(`
+      CREATE TABLE IF NOT EXISTS football_bets (
+        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+        user_id TEXT NOT NULL,
+        fixture_id INTEGER NOT NULL,
+        league TEXT,
+        home TEXT NOT NULL,
+        away TEXT NOT NULL,
+        kickoff TIMESTAMP,
+        selection TEXT NOT NULL,
+        odds REAL NOT NULL,
+        stake_cents INTEGER NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        payout_cents INTEGER NOT NULL DEFAULT 0,
+        created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+        settled_at TIMESTAMP
+      )
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS football_bets_user_idx ON football_bets (user_id, created_at DESC)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS football_bets_status_idx ON football_bets (status)
+    `);
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS football_cache (
+        key TEXT PRIMARY KEY,
+        data JSONB NOT NULL,
+        fetched_at TIMESTAMP NOT NULL DEFAULT NOW()
+      )
+    `);
+
+    await client.query(`
       CREATE TABLE IF NOT EXISTS site_config (
         id INTEGER PRIMARY KEY DEFAULT 1,
         config JSONB NOT NULL DEFAULT '{}',
