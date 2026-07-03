@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import LocaleSelector from "@/components/ui/LocaleSelector";
+import BalanceChip from "@/components/casino/BalanceChip";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useSiteConfig } from "@/lib/contexts/SiteConfigContext";
@@ -168,6 +169,7 @@ export default function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 lg:flex">
+          <BalanceChip />
           <LocaleSelector />
           <UserMenu />
           <a
@@ -233,6 +235,7 @@ export default function Header() {
             })}
           </nav>
           <div className="mt-4 flex flex-col gap-2">
+            {user && <BalanceChip compact />}
             <div className="flex justify-center">
               <LocaleSelector />
             </div>

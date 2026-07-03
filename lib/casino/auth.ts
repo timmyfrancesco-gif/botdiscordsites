@@ -9,6 +9,11 @@ export interface CasinoUser {
   username: string | null;
 }
 
+// Short-lived cache of token → user so repeated bets don't each pay for a
+// round-trip to the bot's /api/auth/me (the main source of casino latency).
+const authCache = new Map<string, { user: CasinoUser; exp: number }>();
+const AUTH_TTL_MS = 60_000;
+
 /**
  * Verifies the caller's main-site bearer token against the bot's /api/auth/me
  * and returns the trusted user id. Balance operations key off this id, so a
@@ -18,6 +23,9 @@ export async function getCasinoUser(req: Request): Promise<CasinoUser | null> {
   const auth = req.headers.get("authorization") ?? "";
   const token = auth.startsWith("Bearer ") ? auth.slice(7).trim() : "";
   if (!token || !API_BASE) return null;
+
+  const cached = authCache.get(token);
+  if (cached && cached.exp > Date.now()) return cached.user;
 
   try {
     const res = await fetch(`${API_BASE}/api/auth/me`, {
@@ -29,7 +37,11 @@ export async function getCasinoUser(req: Request): Promise<CasinoUser | null> {
     const u = data?.user ?? data;
     const id = u?.id;
     if (typeof id !== "string") return null;
-    return { id, username: typeof u?.username === "string" ? u.username : null };
+    const user: CasinoUser = { id, username: typeof u?.username === "string" ? u.username : null };
+    authCache.set(token, { user, exp: Date.now() + AUTH_TTL_MS });
+    // Bound the cache so it can't grow unbounded across many users.
+    if (authCache.size > 5000) authCache.clear();
+    return user;
   } catch {
     return null;
   }

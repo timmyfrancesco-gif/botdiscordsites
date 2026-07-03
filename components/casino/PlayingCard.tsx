@@ -1,5 +1,7 @@
 "use client";
 
+import { motion } from "framer-motion";
+
 const SUIT_CHAR: Record<string, string> = { S: "♠", H: "♥", D: "♦", C: "♣", "?": "" };
 
 export default function PlayingCard({
@@ -14,35 +16,28 @@ export default function PlayingCard({
   hidden?: boolean;
 }) {
   const red = suit === "H" || suit === "D";
-  if (hidden || rank === "?") {
-    return (
-      <div
-        className="card card-back"
-        style={{ animationDelay: `${index * 90}ms` }}
-      >
-        <div className="card-back-inner" />
-      </div>
-    );
-  }
+  const isHidden = hidden || rank === "?";
+
   return (
-    <div
-      className={`card ${red ? "card-red" : "card-black"}`}
-      style={{ animationDelay: `${index * 90}ms` }}
+    <motion.div
+      initial={{ opacity: 0, y: -40, rotate: -12, scale: 0.85 }}
+      animate={{ opacity: 1, y: 0, rotate: 0, scale: 1 }}
+      transition={{ type: "spring", stiffness: 320, damping: 26, delay: index * 0.08 }}
+      className={`relative flex h-[92px] w-[64px] items-center justify-center rounded-lg shadow-[0_6px_16px_-4px_rgba(0,0,0,0.55)] ${
+        isHidden ? "" : "bg-[#fafafa]"
+      } ${red ? "text-[#dc2626]" : "text-[#18181b]"}`}
     >
-      <span className="card-corner top">{rank}{SUIT_CHAR[suit]}</span>
-      <span className="card-pip">{SUIT_CHAR[suit]}</span>
-      <span className="card-corner bottom">{rank}{SUIT_CHAR[suit]}</span>
-      <style jsx>{`
-        .card-corner {
-          position: absolute;
-          font-size: 13px;
-          font-weight: 800;
-          line-height: 1;
-        }
-        .top { top: 6px; left: 7px; }
-        .bottom { bottom: 6px; right: 7px; transform: rotate(180deg); }
-        .card-pip { font-size: 30px; }
-      `}</style>
-    </div>
+      {isHidden ? (
+        <div className="h-full w-full rounded-lg bg-gradient-to-br from-[#2563eb] to-[#1e3a8a] p-1.5">
+          <div className="h-full w-full rounded-md border-2 border-white/35 [background-image:repeating-linear-gradient(45deg,rgba(255,255,255,0.14)_0_6px,transparent_6px_12px)]" />
+        </div>
+      ) : (
+        <>
+          <span className="absolute left-[7px] top-[6px] text-[13px] font-extrabold leading-none">{rank}{SUIT_CHAR[suit]}</span>
+          <span className="text-[30px] leading-none">{SUIT_CHAR[suit]}</span>
+          <span className="absolute bottom-[6px] right-[7px] rotate-180 text-[13px] font-extrabold leading-none">{rank}{SUIT_CHAR[suit]}</span>
+        </>
+      )}
+    </motion.div>
   );
 }

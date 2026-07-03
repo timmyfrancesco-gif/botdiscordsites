@@ -1,52 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import Link from "next/link";
+import { motion, useAnimationControls } from "framer-motion";
 import { casino, eur } from "@/lib/casino/client";
 import { useAuth } from "@/lib/hooks/useAuth";
-import BalanceBar from "./BalanceBar";
-import Link from "next/link";
+import { useCasinoBalance } from "@/lib/contexts/CasinoBalanceContext";
+import BetInput from "./BetInput";
 
 type Side = "heads" | "tails";
 
 export default function CoinFlip() {
   const { user } = useAuth();
-  const [balanceCents, setBalanceCents] = useState<number | null>(null);
-  const [testMode, setTestMode] = useState(true);
-  const [faucetLoading, setFaucetLoading] = useState(false);
+  const { balanceCents, setBalance } = useCasinoBalance();
 
   const [bet, setBet] = useState("1.00");
   const [choice, setChoice] = useState<Side>("heads");
   const [flipping, setFlipping] = useState(false);
-  const [face, setFace] = useState<Side>("heads");
-  const [spin, setSpin] = useState(0);
   const [result, setResult] = useState<{ win: boolean; result: Side; payoutCents: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [lastFair, setLastFair] = useState<string | null>(null);
+  const [fairHash, setFairHash] = useState<string | null>(null);
 
+  const controls = useAnimationControls();
   const clientSeed = useRef(Math.random().toString(36).slice(2));
-
-  useEffect(() => {
-    if (!user) return;
-    casino
-      .getBalance()
-      .then((b) => {
-        setBalanceCents(b.balanceCents);
-        setTestMode(b.testMode);
-      })
-      .catch(() => {});
-  }, [user]);
-
-  async function faucet() {
-    setFaucetLoading(true);
-    try {
-      const r = await casino.faucet();
-      setBalanceCents(r.balanceCents);
-    } catch {
-      /* capped or disabled */
-    } finally {
-      setFaucetLoading(false);
-    }
-  }
 
   async function flip() {
     setError(null);
@@ -60,30 +36,31 @@ export default function CoinFlip() {
       setError("Saldo insufficiente");
       return;
     }
+
     setFlipping(true);
-    // Kick off the spin animation immediately for feedback.
-    setSpin((s) => s + 1800 + Math.floor(Math.random() * 360));
+    // Continuous spin while we wait for the server result.
+    controls.start({
+      rotateY: [0, 360 * 6],
+      transition: { duration: 1.2, ease: "linear", repeat: Infinity },
+    });
 
     try {
       const r = await casino.coinflip(betCents, choice, clientSeed.current);
-      // Land the coin on the real result after the spin.
-      window.setTimeout(() => {
-        setFace(r.result);
-        // Align rotation so the shown face matches the result.
-        setSpin((s) => {
-          const base = Math.ceil(s / 360) * 360;
-          return base + (r.result === "heads" ? 0 : 180);
-        });
-      }, 1500);
-      window.setTimeout(() => {
-        setBalanceCents(r.balanceCents);
-        setResult({ win: r.win, result: r.result, payoutCents: r.payoutCents });
-        setLastFair(`${r.fair.serverSeedHash.slice(0, 16)}… · nonce ${r.fair.nonce}`);
-        setFlipping(false);
-      }, 1900);
+      // Settle: land on the true face with a smooth decelerating spin.
+      const landing = 360 * 8 + (r.result === "heads" ? 0 : 180);
+      await controls.start({
+        rotateY: landing,
+        transition: { duration: 1.1, ease: [0.15, 0.75, 0.2, 1] },
+      });
+      controls.set({ rotateY: r.result === "heads" ? 0 : 180 });
+      setBalance(r.balanceCents);
+      setResult({ win: r.win, result: r.result, payoutCents: r.payoutCents });
+      setFairHash(`${r.fair.serverSeedHash.slice(0, 16)}… · nonce ${r.fair.nonce}`);
     } catch (e) {
-      setSpin((s) => Math.ceil(s / 360) * 360);
+      controls.stop();
+      controls.set({ rotateY: 0 });
       setError(e instanceof Error ? e.message : "Errore");
+    } finally {
       setFlipping(false);
     }
   }
@@ -92,63 +69,45 @@ export default function CoinFlip() {
     return (
       <div className="rounded-2xl border border-border bg-background-elevated/40 p-8 text-center">
         <p className="text-sm text-muted">Accedi per giocare.</p>
-        <Link
-          href="/login"
-          className="mt-4 inline-block rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-background"
-        >
-          Accedi
-        </Link>
+        <Link href="/login" className="mt-4 inline-block rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-background">Accedi</Link>
       </div>
     );
   }
 
   return (
     <div className="flex flex-col gap-5">
-      <BalanceBar
-        balanceCents={balanceCents}
-        testMode={testMode}
-        onFaucet={faucet}
-        faucetLoading={faucetLoading}
-      />
-
       {/* Coin stage */}
-      <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-2xl border border-border bg-background-elevated/30">
-        <div className="coin-scene">
-          <div
-            className="coin"
-            style={{ transform: `rotateY(${spin}deg)`, transition: flipping ? "transform 1.5s cubic-bezier(0.2,0.7,0.2,1)" : "none" }}
+      <div className="relative flex h-72 items-center justify-center overflow-hidden rounded-2xl border border-border bg-[radial-gradient(circle_at_50%_35%,#111a2e,#0a0f1a)]">
+        {/* soft glow */}
+        <div className="pointer-events-none absolute h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
+        <div style={{ perspective: 1000 }}>
+          <motion.div
+            animate={controls}
+            style={{ transformStyle: "preserve-3d", width: 150, height: 150, position: "relative" }}
           >
-            {/* Heads (blue sparkle) */}
-            <div className="coin-face coin-heads">
-              <svg viewBox="0 0 24 24" className="h-16 w-16 text-white" fill="currentColor">
-                <path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" />
-              </svg>
-            </div>
-            {/* Tails (amber) */}
-            <div className="coin-face coin-tails">
-              <span className="text-4xl font-black text-white">1</span>
-            </div>
-          </div>
+            <CoinFace side="heads" />
+            <CoinFace side="tails" />
+          </motion.div>
         </div>
 
         {result && (
-          <div className={`absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full px-5 py-2 text-sm font-bold ${result.win ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}>
-            {result.win ? `Hai vinto ${eur(result.payoutCents)}!` : "Hai perso"} · uscì {result.result === "heads" ? "Testa" : "Croce"}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full px-5 py-2 text-sm font-bold ${result.win ? "bg-emerald-500/20 text-emerald-300" : "bg-rose-500/20 text-rose-300"}`}
+          >
+            {result.win ? `Hai vinto ${eur(result.payoutCents)}!` : "Hai perso"} · {result.result === "heads" ? "Testa" : "Croce"}
+          </motion.div>
         )}
       </div>
 
-      {/* Choice buttons */}
+      {/* Choice */}
       <div className="grid grid-cols-2 gap-3">
         <button
           type="button"
           onClick={() => setChoice("heads")}
           disabled={flipping}
-          className={`flex items-center justify-between rounded-2xl px-5 py-4 text-base font-bold transition-all ${
-            choice === "heads"
-              ? "bg-[#3b82f6] text-white ring-2 ring-white/30"
-              : "bg-[#3b82f6]/80 text-white/90 hover:bg-[#3b82f6]"
-          }`}
+          className={`flex items-center justify-between rounded-2xl px-5 py-4 text-base font-bold text-white transition-all ${choice === "heads" ? "bg-[#3b82f6] ring-2 ring-white/40" : "bg-[#3b82f6]/70 hover:bg-[#3b82f6]"}`}
         >
           Punta su Testa
           <svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" /></svg>
@@ -157,36 +116,14 @@ export default function CoinFlip() {
           type="button"
           onClick={() => setChoice("tails")}
           disabled={flipping}
-          className={`flex items-center justify-between rounded-2xl px-5 py-4 text-base font-bold transition-all ${
-            choice === "tails"
-              ? "bg-[#f59e0b] text-white ring-2 ring-white/30"
-              : "bg-[#f59e0b]/80 text-white/90 hover:bg-[#f59e0b]"
-          }`}
+          className={`flex items-center justify-between rounded-2xl px-5 py-4 text-base font-bold text-white transition-all ${choice === "tails" ? "bg-[#f59e0b] ring-2 ring-white/40" : "bg-[#f59e0b]/70 hover:bg-[#f59e0b]"}`}
         >
           Punta su Croce
           <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white text-xs font-black text-[#f59e0b]">1</span>
         </button>
       </div>
 
-      {/* Bet input */}
-      <div>
-        <div className="mb-2 flex items-center justify-between">
-          <span className="text-xs font-semibold uppercase tracking-widest text-muted">Importo della scommessa</span>
-        </div>
-        <div className="flex items-stretch overflow-hidden rounded-xl border border-border bg-background/60">
-          <span className="flex items-center pl-4 text-accent">€</span>
-          <input
-            type="number"
-            step="0.10"
-            min="0.10"
-            value={bet}
-            onChange={(e) => setBet(e.target.value)}
-            className="w-full bg-transparent px-3 py-3 text-sm text-foreground outline-none"
-          />
-          <button type="button" onClick={() => setBet((b) => (parseFloat(b) / 2 || 0).toFixed(2))} className="border-l border-border px-4 text-sm font-semibold text-muted hover:text-foreground">½</button>
-          <button type="button" onClick={() => setBet((b) => (parseFloat(b) * 2 || 0).toFixed(2))} className="border-l border-border px-4 text-sm font-semibold text-muted hover:text-foreground">2x</button>
-        </div>
-      </div>
+      <BetInput bet={bet} setBet={setBet} disabled={flipping} />
 
       {error && <p className="text-sm text-rose-400">{error}</p>}
 
@@ -199,40 +136,36 @@ export default function CoinFlip() {
         {flipping ? "Lancio…" : "Lancia la moneta"}
       </button>
 
-      {lastFair && (
-        <p className="text-center text-[11px] text-muted">Provably fair · hash {lastFair}</p>
-      )}
-
-      <style jsx>{`
-        .coin-scene {
-          perspective: 1000px;
-          width: 140px;
-          height: 140px;
-        }
-        .coin {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          transform-style: preserve-3d;
-        }
-        .coin-face {
-          position: absolute;
-          inset: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          border-radius: 50%;
-          backface-visibility: hidden;
-          box-shadow: inset 0 0 0 8px rgba(255, 255, 255, 0.25), 0 12px 40px -8px rgba(0, 0, 0, 0.6);
-        }
-        .coin-heads {
-          background: radial-gradient(circle at 50% 40%, #60a5fa, #2563eb);
-        }
-        .coin-tails {
-          background: radial-gradient(circle at 50% 40%, #fbbf24, #f59e0b);
-          transform: rotateY(180deg);
-        }
-      `}</style>
+      {fairHash && <p className="text-center text-[11px] text-muted">Provably fair · hash {fairHash}</p>}
     </div>
   );
 }
+
+function CoinFace({ side }: { side: Side }) {
+  const heads = side === "heads";
+  return (
+    <div
+      style={{
+        position: "absolute",
+        inset: 0,
+        borderRadius: "50%",
+        backfaceVisibility: "hidden",
+        transform: heads ? undefined : "rotateY(180deg)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: heads
+          ? "radial-gradient(circle at 50% 38%, #60a5fa, #2563eb)"
+          : "radial-gradient(circle at 50% 38%, #fbbf24, #f59e0b)",
+        boxShadow: "inset 0 0 0 9px rgba(255,255,255,0.22), 0 16px 44px -10px rgba(0,0,0,0.7)",
+      }}
+    >
+      {heads ? (
+        <svg viewBox="0 0 24 24" className="h-16 w-16 text-white" fill="currentColor"><path d="M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z" /></svg>
+      ) : (
+        <span className="text-5xl font-black text-white">1</span>
+      )}
+    </div>
+  );
+}
+

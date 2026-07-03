@@ -4,14 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { casino, eur, type BlackjackView } from "@/lib/casino/client";
 import { useAuth } from "@/lib/hooks/useAuth";
-import BalanceBar from "./BalanceBar";
+import { useCasinoBalance } from "@/lib/contexts/CasinoBalanceContext";
 import PlayingCard from "./PlayingCard";
+import BetInput from "./BetInput";
 
 export default function Blackjack() {
   const { user } = useAuth();
-  const [balanceCents, setBalanceCents] = useState<number | null>(null);
-  const [testMode, setTestMode] = useState(true);
-  const [faucetLoading, setFaucetLoading] = useState(false);
+  const { balanceCents, setBalance } = useCasinoBalance();
 
   const [bet, setBet] = useState("1.00");
   const [game, setGame] = useState<BlackjackView | null>(null);
@@ -21,26 +20,13 @@ export default function Blackjack() {
 
   useEffect(() => {
     if (!user) return;
-    Promise.all([casino.getBalance(), casino.bjState()])
-      .then(([b, s]) => {
-        setBalanceCents(b.balanceCents);
-        setTestMode(b.testMode);
+    casino
+      .bjState()
+      .then((s) => {
         if (s.state) setGame(s.state);
       })
       .catch(() => {});
   }, [user]);
-
-  async function faucet() {
-    setFaucetLoading(true);
-    try {
-      const r = await casino.faucet();
-      setBalanceCents(r.balanceCents);
-    } catch {
-      /* capped/disabled */
-    } finally {
-      setFaucetLoading(false);
-    }
-  }
 
   async function start() {
     setError(null);
@@ -57,7 +43,7 @@ export default function Blackjack() {
     try {
       const r = await casino.bjStart(betCents, clientSeed.current);
       setGame(r.state);
-      setBalanceCents(r.balanceCents);
+      setBalance(r.balanceCents);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Errore");
     } finally {
@@ -71,7 +57,7 @@ export default function Blackjack() {
     try {
       const r = await casino.bjAction(action);
       setGame(r.state);
-      setBalanceCents(r.balanceCents);
+      setBalance(r.balanceCents);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Errore");
     } finally {
@@ -99,8 +85,6 @@ export default function Blackjack() {
 
   return (
     <div className="flex flex-col gap-5">
-      <BalanceBar balanceCents={balanceCents} testMode={testMode} onFaucet={faucet} faucetLoading={faucetLoading} />
-
       {/* Table */}
       <div className="relative overflow-hidden rounded-2xl border border-border bg-[radial-gradient(circle_at_50%_0%,#12324a,#0a1622)] p-5">
         <div className="mb-4 flex flex-col items-center gap-1">
@@ -171,24 +155,7 @@ export default function Blackjack() {
         </div>
       ) : (
         <>
-          <div>
-            <div className="mb-2 flex items-center justify-between">
-              <span className="text-xs font-semibold uppercase tracking-widest text-muted">Importo della scommessa</span>
-            </div>
-            <div className="flex items-stretch overflow-hidden rounded-xl border border-border bg-background/60">
-              <span className="flex items-center pl-4 text-accent">€</span>
-              <input
-                type="number"
-                step="0.10"
-                min="0.10"
-                value={bet}
-                onChange={(e) => setBet(e.target.value)}
-                className="w-full bg-transparent px-3 py-3 text-sm text-foreground outline-none"
-              />
-              <button type="button" onClick={() => setBet((b) => (parseFloat(b) / 2 || 0).toFixed(2))} className="border-l border-border px-4 text-sm font-semibold text-muted hover:text-foreground">½</button>
-              <button type="button" onClick={() => setBet((b) => (parseFloat(b) * 2 || 0).toFixed(2))} className="border-l border-border px-4 text-sm font-semibold text-muted hover:text-foreground">2x</button>
-            </div>
-          </div>
+          <BetInput bet={bet} setBet={setBet} disabled={busy} />
           <button
             type="button"
             onClick={game?.finished ? newRound : start}
