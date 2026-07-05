@@ -51,8 +51,48 @@ function mapProducts(res: ProductsResponse | null): ShopItem[] {
       variants: p.variants,
       deliverableType: p.deliverableType,
       totalSold: p.totalSold,
+      source: "bot",
     };
   });
+}
+
+interface PlatformProduct {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  currency: string;
+  image: string | null;
+  category: string;
+  stock: number;
+  totalSold: number;
+}
+
+function mapPlatformProducts(products: PlatformProduct[]): ShopItem[] {
+  return products.map((p) => ({
+    id: p.id,
+    name: p.name,
+    category: p.category || "Shop",
+    price: p.price,
+    currency: p.currency,
+    stock: p.stock,
+    description: p.description,
+    icon: "shop",
+    image: p.image ?? undefined,
+    totalSold: p.totalSold,
+    source: "platform",
+  }));
+}
+
+async function fetchPlatformProducts(): Promise<ShopItem[]> {
+  try {
+    const res = await fetch("/api/store/products");
+    if (!res.ok) return [];
+    const data = await res.json();
+    return mapPlatformProducts(data?.products ?? []);
+  } catch {
+    return [];
+  }
 }
 
 export interface HomepageInitialData {
@@ -93,7 +133,10 @@ export function HomepageDataProvider({
 
     async function load() {
       try {
-        const res = await fetch("/api/cache/homepage");
+        const [res, platformItems] = await Promise.all([
+          fetch("/api/cache/homepage"),
+          fetchPlatformProducts(),
+        ]);
         if (!res.ok || cancelled) return;
         const json = await res.json();
         if (cancelled) return;
@@ -102,7 +145,7 @@ export function HomepageDataProvider({
         setFeed(json.feed?.items ?? []);
         const prods = json.products ?? null;
         setProducts(prods);
-        setShopItems(mapProducts(prods));
+        setShopItems([...platformItems, ...mapProducts(prods)]);
         setReviews(json.reviews ?? null);
         setSmmProducts(json.smmProducts ?? null);
         setLoaded(true);

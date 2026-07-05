@@ -95,6 +95,8 @@ export interface ShopItem {
   variants?: ProductVariant[];
   deliverableType?: DeliverableType;
   totalSold?: number;
+  /** "platform" = reliable Postgres-backed store product; absent/"bot" = legacy bot-managed product. */
+  source?: "bot" | "platform";
 }
 
 export interface ProductVariant {
@@ -127,6 +129,9 @@ export interface ApiProduct {
   smmMaxQty?: number;
   variants?: ProductVariant[];
   totalSold?: number;
+  /** "platform" = reliable Postgres-backed store product; absent/"bot" = legacy bot-managed product. */
+  source?: "bot" | "platform";
+  active?: boolean;
 }
 
 export interface ProductsResponse {

@@ -5,7 +5,7 @@ import { getLtcPrice, getProductOrder } from "@/lib/api";
 import { formatEur, formatUsd } from "@/lib/format";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useQrCode } from "@/lib/hooks/useQrCode";
-import type { ProductOrderResponse } from "@/lib/types";
+import type { ProductOrderResponse, ProductOrderStatusResponse } from "@/lib/types";
 
 const POLL_INTERVAL_MS = 5000;
 
@@ -15,6 +15,9 @@ interface LtcPaymentProps {
   email?: string;
   onPaid: (deliveredItem?: string | null) => void;
   onCancelled: () => void;
+  /** Defaults to polling the bot's order-status endpoint; pass a different
+   * function (e.g. getStoreOrder) for orders created outside the bot. */
+  pollFn?: (orderId: string) => Promise<ProductOrderStatusResponse | null>;
 }
 
 type PaymentPhase = "waiting" | "confirming" | "done";
@@ -104,7 +107,7 @@ function CircularProgress({ percentage }: { percentage: number }) {
   );
 }
 
-export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelled }: LtcPaymentProps) {
+export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelled, pollFn = getProductOrder }: LtcPaymentProps) {
   const { t } = useLocale();
   const [ltcEur, setLtcEur] = useState<number | null>(null);
   const [ltcUsd, setLtcUsd] = useState<number | null>(null);
@@ -136,7 +139,7 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
   useEffect(() => {
     let cancelled = false;
     const interval = setInterval(async () => {
-      const statusRes = await getProductOrder(order.orderId);
+      const statusRes = await pollFn(order.orderId);
       if (cancelled || !statusRes) return;
 
       if (statusRes.confirmations !== undefined) {

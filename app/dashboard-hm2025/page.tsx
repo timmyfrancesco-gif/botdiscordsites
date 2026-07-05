@@ -617,7 +617,7 @@ function AdminPanel() {
   const refresh = useCallback(async () => {
     setLoading(true);
     try {
-      const [statsRes, productsRes, feedRes, ltcRes, healthRes, walletRes, reviewsRes] =
+      const [statsRes, productsRes, feedRes, ltcRes, healthRes, walletRes, reviewsRes, platformProductsRes] =
         await Promise.all([
           getStats(),
           getProducts(),
@@ -626,9 +626,27 @@ function AdminPanel() {
           getHealth(),
           getWalletInfo(),
           getReviews(),
+          fetch("/api/store/admin/products").then((r) => (r.ok ? r.json() : null)).catch(() => null),
         ]);
       if (statsRes) setStats(statsRes);
-      if (productsRes?.products) setProducts(productsRes.products);
+      const botProducts: ApiProduct[] = (productsRes?.products ?? []).map((p) => ({ ...p, source: "bot" as const }));
+      const platformProducts: ApiProduct[] = (platformProductsRes?.products ?? []).map(
+        (p: { id: string; name: string; description: string; price: number; currency: string; image: string | null; category: string; active: boolean; totalSold: number; stock: number }) => ({
+          id: p.id,
+          name: p.name,
+          price: p.price,
+          currency: p.currency,
+          stock: p.stock,
+          image: p.image ?? undefined,
+          description: p.description,
+          category: p.category,
+          deliverableType: "serials" as const,
+          totalSold: p.totalSold,
+          active: p.active,
+          source: "platform" as const,
+        })
+      );
+      setProducts([...platformProducts, ...botProducts]);
       if (feedRes?.items) setFeed(feedRes.items);
       if (reviewsRes?.reviews) setReviews(reviewsRes.reviews);
       if (ltcRes) setLtc(ltcRes);
@@ -763,26 +781,39 @@ function AdminPanel() {
 
   /* -- product actions -- */
   async function handleDeleteProduct(product: ApiProduct) {
-    const ok = await deleteProduct(product.id);
+    const ok =
+      product.source === "platform"
+        ? (await fetch(`/api/store/admin/products/${product.id}`, { method: "DELETE" })).ok
+        : await deleteProduct(product.id);
     if (ok) {
       setProducts((prev) => prev.filter((p) => p.id !== product.id));
-      showToast(`"${product.name}" eliminato`, true);
+      showToast(`"${product.name}" deleted`, true);
     } else {
-      showToast(!tokenConfigured ? "ADMIN_TOKEN non configurato su Vercel — fai Redeploy" : "Errore eliminazione prodotto — controlla console (F12)", false);
+      showToast(!tokenConfigured ? "ADMIN_TOKEN not configured on Vercel — redeploy" : "Error deleting product — check console (F12)", false);
     }
     setModal(null);
   }
 
-  // The generic product endpoint silently ignores stock/stockItems (bot design —
-  // it's metadata-only). Real stock must go through the dedicated stock endpoint,
-  // which is also the only endpoint that actually persists deliverable items
-  // (create-product always starts a product at stock 0 regardless of payload).
+  // The generic bot product endpoint silently ignores stock/stockItems (bot
+  // design — it's metadata-only). Real stock must go through the dedicated
+  // stock endpoint (create-product always starts a product at stock 0
+  // regardless of payload). Platform products always use the reliable
+  // item-row engine and replace their full stock list on every save.
   async function persistStock(
     id: string,
     variants: ApiProduct["variants"],
-    deliverableType?: string
+    deliverableType: string | undefined,
+    source: "bot" | "platform"
   ) {
     if (!variants || variants.length === 0) return;
+    if (source === "platform") {
+      await fetch(`/api/store/admin/products/${id}/stock`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ items: variants[0].stockItems ?? [], mode: "replace" }),
+      });
+      return;
+    }
     if (deliverableType !== "serials") {
       // Non-serial deliverables track stock as a plain count with no real
       // items behind it — send the bare number, never an items array.
@@ -801,35 +832,94 @@ function AdminPanel() {
   }
 
   async function handleSaveProduct(
-    data: Partial<ApiProduct> & { id?: string }
+    data: Partial<ApiProduct> & { id?: string; source?: "bot" | "platform" }
   ) {
+    const source = data.source ?? "platform";
+
+    if (source === "platform") {
+      if (data.id) {
+        const res = await fetch(`/api/store/admin/products/${data.id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.name,
+            price: data.price,
+            description: data.description,
+            category: data.category,
+            image: data.image ?? null,
+          }),
+        });
+        if (res.ok) {
+          const { product: updated } = await res.json();
+          await persistStock(data.id, data.variants, "serials", "platform");
+          setProducts((prev) =>
+            prev.map((p) =>
+              p.id === data.id
+                ? { ...p, ...updated, variants: data.variants, stock: totalStockOf(data.variants), source: "platform" }
+                : p
+            )
+          );
+          showToast(`"${updated.name}" updated`, true);
+        } else {
+          showToast((await res.json().catch(() => ({}))).error || "Error updating product", false);
+        }
+      } else {
+        const res = await fetch("/api/store/admin/products", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: data.name,
+            price: data.price,
+            description: data.description,
+            category: data.category,
+            image: data.image ?? null,
+          }),
+        });
+        if (res.ok) {
+          const { product: created } = await res.json();
+          await persistStock(created.id, data.variants, "serials", "platform");
+          setProducts((prev) => [
+            ...prev,
+            { ...created, variants: data.variants, stock: totalStockOf(data.variants), source: "platform" },
+          ]);
+          showToast(`"${created.name}" created`, true);
+        } else {
+          showToast((await res.json().catch(() => ({}))).error || "Error creating product", false);
+        }
+      }
+      setActiveNav("products");
+      setEditingProduct(null);
+      return;
+    }
+
+    // -- legacy bot product path --
     if (data.id) {
       const { id, ...rest } = data;
       const updated = await updateProduct(id, rest);
       if (updated) {
-        await persistStock(id, data.variants, data.deliverableType);
+        await persistStock(id, data.variants, data.deliverableType, "bot");
         setProducts((prev) =>
           prev.map((p) =>
             p.id === id
-              ? { ...p, ...updated, variants: data.variants, stock: totalStockOf(data.variants) }
+              ? { ...p, ...updated, variants: data.variants, stock: totalStockOf(data.variants), source: "bot" }
               : p
           )
         );
-        showToast(`"${updated.name}" aggiornato`, true);
+        showToast(`"${updated.name}" updated`, true);
       } else {
-        showToast(!tokenConfigured ? "ADMIN_TOKEN non configurato — fai Redeploy su Vercel" : "Errore aggiornamento prodotto — controlla console (F12)", false);
+        showToast(!tokenConfigured ? "ADMIN_TOKEN not configured — redeploy on Vercel" : "Error updating product — check console (F12)", false);
       }
     } else {
       const created = await createProduct(data as Omit<ApiProduct, "id">);
       if (created) {
-        await persistStock(created.id, data.variants, data.deliverableType);
+        await persistStock(created.id, data.variants, data.deliverableType, "bot");
         setProducts((prev) => [
           ...prev,
-          { ...created, variants: data.variants, stock: totalStockOf(data.variants) },
+          { ...created, variants: data.variants, stock: totalStockOf(data.variants), source: "bot" },
         ]);
-        showToast(`"${created.name}" creato`, true);
+        showToast(`"${created.name}" created`, true);
       } else {
-        showToast(!tokenConfigured ? "ADMIN_TOKEN non configurato — fai Redeploy su Vercel" : "Errore creazione prodotto — controlla console (F12)", false);
+        showToast(!tokenConfigured ? "ADMIN_TOKEN not configured — redeploy on Vercel" : "Error creating product — check console (F12)", false);
       }
     }
     setActiveNav("products");
@@ -839,11 +929,11 @@ function AdminPanel() {
   async function handleTransfer(amount: number, toAddress: string) {
     const res = await transferFunds(amount, toAddress);
     if (res) {
-      showToast(`Trasferimento completato! TX: ${res.txId}`, true);
+      showToast(`Transfer completed! TX: ${res.txId}`, true);
       const walletRes = await getWalletInfo();
       if (walletRes) setWallet(walletRes);
     } else {
-      showToast("Errore trasferimento fondi", false);
+      showToast("Error transferring funds", false);
     }
     setModal(null);
   }
@@ -854,7 +944,27 @@ function AdminPanel() {
     setSidebarOpen(false);
   }
 
-  function openProductEdit(product: ApiProduct | null) {
+  async function openProductEdit(product: ApiProduct | null) {
+    // Platform products don't carry their stock items in the list response
+    // (kept lightweight) — fetch the real item rows so the edit form's
+    // stock panel starts from the actual current list, not empty.
+    if (product && product.source === "platform") {
+      try {
+        const res = await fetch(`/api/store/admin/products/${product.id}`);
+        if (res.ok) {
+          const { items } = await res.json();
+          const stockItems = (items as { content: string; status: string }[])
+            .filter((i) => i.status === "available")
+            .map((i) => i.content);
+          product = {
+            ...product,
+            variants: [{ id: "default", title: "Default", price: product.price, stock: stockItems.length, stockItems }],
+          };
+        }
+      } catch {
+        // fall through with whatever we already have
+      }
+    }
     setEditingProduct(product);
     setActiveNav("product-edit");
     setSidebarOpen(false);
@@ -1733,6 +1843,9 @@ function ProductsView({
               >
                 {/* Product Image */}
                 <div className="relative h-44 w-full overflow-hidden">
+                  <span className={`absolute left-2 top-2 z-10 rounded-full px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide ${p.source === "platform" ? "bg-[#90C6FF]/90 text-black" : "bg-black/60 text-zinc-300"}`}>
+                    {p.source === "platform" ? "Site" : "Bot"}
+                  </span>
                   {p.image || (p.images && p.images[0]) ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -1871,6 +1984,9 @@ function ProductEditView({
   onCancel: () => void;
   onDelete: (product: ApiProduct) => void;
 }) {
+  // New products default to the reliable platform (Postgres) engine; editing
+  // an existing bot product keeps using the bot path.
+  const source: "bot" | "platform" = product?.source ?? "platform";
   const [name, setName] = useState(product?.name ?? "");
   const [urlPath, setUrlPath] = useState(product?.url ?? "");
   const [urlManuallyEdited, setUrlManuallyEdited] = useState(!!product?.url);
@@ -2031,6 +2147,7 @@ function ProductEditView({
       }));
       await onSave({
         ...(product ? { id: product.id } : {}),
+        source,
         name: name.trim(),
         price: cheapest,
         currency: "EUR",
@@ -2041,9 +2158,10 @@ function ProductEditView({
         stock: totalStock,
         category: category.trim() || undefined,
         instructions: instructions || undefined,
-        deliverableType: deliverableType || undefined,
+        deliverableType: source === "platform" ? "serials" : (deliverableType || undefined),
         variants: builtVariants,
-        ...(deliverableType === "smm-panels" ? {
+        active: true,
+        ...(source === "bot" && deliverableType === "smm-panels" ? {
           smmServiceId: smmServiceId ? parseInt(smmServiceId, 10) : undefined,
           smmMinQty: smmMinQty ? parseInt(smmMinQty, 10) : undefined,
           smmMaxQty: smmMaxQty ? parseInt(smmMaxQty, 10) : undefined,
@@ -2079,9 +2197,14 @@ function ProductEditView({
       {/* Header */}
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-xl font-bold text-white">
-            {product ? "Edit Product" : "Create Product"}
-          </h2>
+          <div className="flex items-center gap-2">
+            <h2 className="text-xl font-bold text-white">
+              {product ? "Edit Product" : "Create Product"}
+            </h2>
+            <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide ${source === "platform" ? "bg-[#90C6FF]/15 text-[#90C6FF]" : "bg-zinc-500/15 text-zinc-400"}`}>
+              {source === "platform" ? "Site product" : "Bot product"}
+            </span>
+          </div>
           <p className="mt-1 text-sm text-zinc-500">Edit the product details below.</p>
         </div>
         <div className="flex items-center gap-2">
@@ -2290,7 +2413,9 @@ function ProductEditView({
         </div>
       </div>
 
-      {/* Section: Deliverable Type */}
+      {/* Section: Deliverable Type — platform products always use the reliable
+          item-row serials engine, so the picker only applies to legacy bot products. */}
+      {source === "bot" && (
       <div
         className="rounded-xl border border-white/5 p-6"
         style={{ backgroundColor: "#121214" }}
@@ -2356,6 +2481,7 @@ function ProductEditView({
           </div>
         )}
       </div>
+      )}
         </div>
       )}
 
@@ -2626,6 +2752,7 @@ function ProductEditView({
             );
           })}
 
+          {source === "bot" && (
           <button
             type="button"
             onClick={addVariant}
@@ -2633,6 +2760,7 @@ function ProductEditView({
           >
             <span className="text-base leading-none">+</span> Create a New Variant
           </button>
+          )}
         </div>
       </div>
       )}

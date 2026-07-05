@@ -203,6 +203,38 @@ export function getProductOrder(
   return apiFetch<ProductOrderStatusResponse>(`/api/product-order/${encodeURIComponent(id)}`);
 }
 
+/**
+ * Platform store orders (reliable Postgres-backed products) — these hit this
+ * Next app's own API, never the external bot, so they work independently of
+ * bot uptime/storage.
+ */
+export async function createStoreOrder(payload: {
+  productId: string;
+  email: string;
+}): Promise<ProductOrderResponse | null> {
+  try {
+    const res = await fetch("/api/store/orders", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) return null;
+    return (await res.json()) as ProductOrderResponse;
+  } catch {
+    return null;
+  }
+}
+
+export async function getStoreOrder(id: string): Promise<ProductOrderStatusResponse | null> {
+  try {
+    const res = await fetch(`/api/store/orders/${encodeURIComponent(id)}`, { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as ProductOrderStatusResponse;
+  } catch {
+    return null;
+  }
+}
+
 // ── Product CRUD (admin) ──────────────────────────────────────────────
 
 export function updateProduct(

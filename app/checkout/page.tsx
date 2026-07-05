@@ -6,7 +6,7 @@ import Link from "next/link";
 import PageShell from "@/components/layout/PageShell";
 import LtcPayment from "@/components/shop/LtcPayment";
 import PaypalPayment from "@/components/shop/PaypalPayment";
-import { createProductOrder, isApiConfigured, submitReview } from "@/lib/api";
+import { createProductOrder, createStoreOrder, getStoreOrder, isApiConfigured, submitReview } from "@/lib/api";
 import { useCart } from "@/lib/hooks/useCart";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useProducts } from "@/lib/hooks/useProducts";
@@ -153,6 +153,7 @@ function CheckoutContent() {
   const [loading, setLoading] = useState(false);
   const [index, setIndex] = useState(0);
   const [order, setOrder] = useState<ProductOrderResponse | null>(null);
+  const [orderSource, setOrderSource] = useState<"bot" | "platform">("bot");
   const [finished, setFinished] = useState(false);
   const [cancelled, setCancelled] = useState(false);
   const [deliveredItems, setDeliveredItems] = useState<(string | null | undefined)[]>([]);
@@ -193,10 +194,11 @@ function CheckoutContent() {
       if (!productId) return;
       const raw = sessionStorage.getItem(ORDER_STORAGE_KEY);
       if (!raw) return;
-      const stored = JSON.parse(raw) as { order: ProductOrderResponse; productId: string; email: string; ts: number };
+      const stored = JSON.parse(raw) as { order: ProductOrderResponse; orderSource?: "bot" | "platform"; productId: string; email: string; ts: number };
       if (stored.productId === productId && Date.now() - stored.ts < 3_600_000) {
         setEmail(stored.email);
         setOrder(stored.order);
+        setOrderSource(stored.orderSource ?? "bot");
       } else {
         sessionStorage.removeItem(ORDER_STORAGE_KEY);
       }
@@ -268,19 +270,23 @@ function CheckoutContent() {
       return;
     }
 
-    if (!isApiConfigured()) {
+    if (!currentItem || !currentEntry) return;
+
+    const isPlatform = currentItem.source === "platform";
+    if (!isPlatform && !isApiConfigured()) {
       setError(t("checkout.unavailable"));
       return;
     }
 
-    if (!currentItem || !currentEntry) return;
     setLoading(true);
-    const res = await createProductOrder({
-      productId: currentItem.id,
-      discord: email.trim(),
-      ...(currentEntry.variantId ? { variantId: currentEntry.variantId } : {}),
-      method: paymentMethod === "paypal" ? "paypal" : "ltc",
-    });
+    const res = isPlatform
+      ? await createStoreOrder({ productId: currentItem.id, email: email.trim() })
+      : await createProductOrder({
+          productId: currentItem.id,
+          discord: email.trim(),
+          ...(currentEntry.variantId ? { variantId: currentEntry.variantId } : {}),
+          method: paymentMethod === "paypal" ? "paypal" : "ltc",
+        });
     setLoading(false);
 
     if (!res) {
@@ -288,10 +294,12 @@ function CheckoutContent() {
       return;
     }
 
+    setOrderSource(isPlatform ? "platform" : "bot");
     setOrder(res);
     try {
       sessionStorage.setItem(ORDER_STORAGE_KEY, JSON.stringify({
         order: res,
+        orderSource: isPlatform ? "platform" : "bot",
         productId: currentItem.id,
         email: email.trim(),
         ts: Date.now(),
@@ -408,40 +416,42 @@ function CheckoutContent() {
             </div>
           </div>
 
-          {/* Payment method section */}
-          <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
-              {t("checkout.paymentMethod")}
-            </h2>
-            <div className="mt-3 flex flex-col gap-2">
-              {paymentMethods.map((method) => (
-                <button
-                  key={method.id}
-                  type="button"
-                  disabled={!method.available}
-                  onClick={() => setPaymentMethod(method.id)}
-                  className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
-                    paymentMethod === method.id && method.available
-                      ? "border-accent/60 bg-accent/10 text-accent"
-                      : "border-border bg-background/60 text-foreground"
-                  } ${!method.available ? "cursor-not-allowed opacity-40" : "hover:border-accent/40"}`}
-                >
-                  <span className={`h-9 w-9 shrink-0 overflow-hidden rounded-full ${method.available ? "text-accent" : "text-muted/40"}`}>
-                    {method.icon}
-                  </span>
-                  <span className="text-left">
-                    <span className="block font-medium">{method.label}</span>
-                    <span className="block text-xs text-muted">{method.sub}</span>
-                  </span>
-                  {paymentMethod === method.id && method.available && (
-                    <svg viewBox="0 0 24 24" className="ml-auto h-4 w-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                      <path d="M20 6 9 17l-5-5" />
-                    </svg>
-                  )}
-                </button>
-              ))}
+          {/* Payment method section — platform products are LTC-only for now */}
+          {currentItem?.source !== "platform" && (
+            <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+                {t("checkout.paymentMethod")}
+              </h2>
+              <div className="mt-3 flex flex-col gap-2">
+                {paymentMethods.map((method) => (
+                  <button
+                    key={method.id}
+                    type="button"
+                    disabled={!method.available}
+                    onClick={() => setPaymentMethod(method.id)}
+                    className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
+                      paymentMethod === method.id && method.available
+                        ? "border-accent/60 bg-accent/10 text-accent"
+                        : "border-border bg-background/60 text-foreground"
+                    } ${!method.available ? "cursor-not-allowed opacity-40" : "hover:border-accent/40"}`}
+                  >
+                    <span className={`h-9 w-9 shrink-0 overflow-hidden rounded-full ${method.available ? "text-accent" : "text-muted/40"}`}>
+                      {method.icon}
+                    </span>
+                    <span className="text-left">
+                      <span className="block font-medium">{method.label}</span>
+                      <span className="block text-xs text-muted">{method.sub}</span>
+                    </span>
+                    {paymentMethod === method.id && method.available && (
+                      <svg viewBox="0 0 24 24" className="ml-auto h-4 w-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                        <path d="M20 6 9 17l-5-5" />
+                      </svg>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           {error ? <p className="text-sm text-rose-400">{error}</p> : null}
 
@@ -465,7 +475,14 @@ function CheckoutContent() {
           {order.method === "paypal" ? (
             <PaypalPayment order={order} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
           ) : (
-            <LtcPayment order={order} cartTotal={queueTotal} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
+            <LtcPayment
+              order={order}
+              cartTotal={queueTotal}
+              email={email}
+              onPaid={handlePaid}
+              onCancelled={handleCancelled}
+              pollFn={orderSource === "platform" ? getStoreOrder : undefined}
+            />
           )}
         </div>
       ) : null}
