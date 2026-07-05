@@ -11,28 +11,52 @@ export interface GeneratedWallet {
   wif: string;
 }
 
-export async function generateWallet(
-  chain: "ltc" | "btc"
-): Promise<GeneratedWallet | null> {
+export interface GenerateWalletResult {
+  wallet: GeneratedWallet | null;
+  error?: string;
+}
+
+/**
+ * Same as generateWallet, but reports WHY it failed (missing token, rate
+ * limited, invalid token, etc.) instead of a silent null — needed so
+ * checkout errors are actually diagnosable instead of a generic
+ * "could not create payment wallet".
+ */
+export async function generateWalletVerbose(chain: "ltc" | "btc"): Promise<GenerateWalletResult> {
   const token = process.env.BLOCKCYPHER_TOKEN;
-  if (!token) return null;
+  if (!token) return { wallet: null, error: "BLOCKCYPHER_TOKEN is not configured on the server" };
 
   try {
     const res = await fetch(
       `https://api.blockcypher.com/v1/${chain}/main/addrs?token=${token}`,
       { method: "POST" }
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      let reason = `BlockCypher error ${res.status}`;
+      if (res.status === 429) reason = "BlockCypher rate limit reached, try again shortly";
+      else if (res.status === 401 || res.status === 403) reason = "BlockCypher token is invalid or unauthorized";
+      console.error(`[generateWallet] ${chain} POST /addrs -> ${res.status}: ${body.slice(0, 300)}`);
+      return { wallet: null, error: reason };
+    }
     const data = await res.json();
-    if (!data?.address) return null;
+    if (!data?.address) return { wallet: null, error: "BlockCypher response missing an address" };
     return {
-      address: data.address as string,
-      privateKey: data.private as string,
-      wif: data.wif as string,
+      wallet: {
+        address: data.address as string,
+        privateKey: data.private as string,
+        wif: data.wif as string,
+      },
     };
-  } catch {
-    return null;
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : "network error";
+    console.error(`[generateWallet] ${chain} request failed:`, msg);
+    return { wallet: null, error: `Could not reach BlockCypher: ${msg}` };
   }
+}
+
+export async function generateWallet(chain: "ltc" | "btc"): Promise<GeneratedWallet | null> {
+  return (await generateWalletVerbose(chain)).wallet;
 }
 
 /**

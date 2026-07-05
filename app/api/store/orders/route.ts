@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { storeOrders, storeProducts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
-import { generateWallet, getLtcPriceEur } from "@/lib/crypto/wallet";
+import { generateWalletVerbose, getLtcPriceEur } from "@/lib/crypto/wallet";
 import { encryptSecret } from "@/lib/crypto/secrets";
 import { availableCount } from "@/lib/store/inventory";
 import { serverError } from "@/lib/http";
@@ -76,9 +76,13 @@ export async function POST(req: Request) {
     }
     const amountLtc = Number((product.price / ltcPrice).toFixed(8));
 
-    const wallet = await generateWallet("ltc");
+    const { wallet, error: walletError } = await generateWalletVerbose("ltc");
     if (!wallet) {
-      return NextResponse.json({ error: "could not create payment wallet, try again" }, { status: 503 });
+      console.error("[store/orders] wallet generation failed:", walletError);
+      return NextResponse.json(
+        { error: walletError ? `Payment wallet error: ${walletError}` : "could not create payment wallet, try again" },
+        { status: 503 }
+      );
     }
 
     const [order] = await db
