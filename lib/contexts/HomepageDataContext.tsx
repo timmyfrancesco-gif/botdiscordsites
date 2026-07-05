@@ -51,7 +51,9 @@ function mapProducts(res: ProductsResponse | null): ShopItem[] {
       variants: p.variants,
       deliverableType: p.deliverableType,
       totalSold: p.totalSold,
-      source: "bot",
+      // Preserve a server-injected "platform" tag (see lib/serverData.ts);
+      // anything without one is a legacy bot product.
+      source: p.source ?? "bot",
     };
   });
 }
