@@ -260,6 +260,8 @@ export async function runMigrations() {
         delivered_item TEXT,
         tx_hash TEXT,
         confirmations INTEGER DEFAULT 0,
+        refund_address TEXT,
+        refund_tx_hash TEXT,
         created_at TIMESTAMP NOT NULL DEFAULT NOW(),
         updated_at TIMESTAMP NOT NULL DEFAULT NOW()
       )
@@ -267,6 +269,8 @@ export async function runMigrations() {
     await client.query(`
       CREATE INDEX IF NOT EXISTS store_orders_status_idx ON store_orders (status, created_at)
     `);
+    try { await client.query(`ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS refund_address TEXT`); } catch {}
+    try { await client.query(`ALTER TABLE store_orders ADD COLUMN IF NOT EXISTS refund_tx_hash TEXT`); } catch {}
 
     await client.query(`
       CREATE TABLE IF NOT EXISTS site_config (

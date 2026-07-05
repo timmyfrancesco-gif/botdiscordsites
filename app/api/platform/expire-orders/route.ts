@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkPlatformHeader } from "@/lib/platform/auth";
 import { expireStaleOrders } from "@/lib/platform/expireStale";
+import { expireStalestoreOrders } from "@/lib/store/settle";
 import { serverError } from "@/lib/http";
 
 /**
@@ -33,8 +34,11 @@ async function sweep(req: Request) {
     return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
   try {
-    const expired = await expireStaleOrders();
-    return NextResponse.json({ ok: true, expired });
+    const [expiredTenant, expiredStore] = await Promise.all([
+      expireStaleOrders(),
+      expireStalestoreOrders(),
+    ]);
+    return NextResponse.json({ ok: true, expired: expiredTenant, expiredStore });
   } catch (e) {
     return serverError("platform/expire-orders", e);
   }

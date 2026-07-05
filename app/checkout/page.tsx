@@ -156,6 +156,7 @@ function CheckoutContent() {
   const [orderSource, setOrderSource] = useState<"bot" | "platform">("bot");
   const [finished, setFinished] = useState(false);
   const [cancelled, setCancelled] = useState(false);
+  const [refunded, setRefunded] = useState<{ txHash?: string } | null>(null);
   const [deliveredItems, setDeliveredItems] = useState<(string | null | undefined)[]>([]);
   const [restoredFinished, setRestoredFinished] = useState<FinishedData | null>(null);
 
@@ -242,6 +243,34 @@ function CheckoutContent() {
         <Link
           href="/#shop"
           className="rounded-full border border-rose-500/30 bg-rose-500/10 px-6 py-2.5 text-sm font-semibold text-rose-400 transition-colors hover:bg-rose-500 hover:text-white"
+        >
+          {t("checkout.backToShop")}
+        </Link>
+      </div>
+    );
+  }
+
+  if (refunded) {
+    return (
+      <div className="mt-10 flex flex-col items-center gap-6 rounded-2xl border border-blue-500/30 bg-blue-500/5 p-10 text-center">
+        <div className="flex h-20 w-20 items-center justify-center rounded-full border-2 border-blue-500/40 bg-blue-500/10">
+          <svg viewBox="0 0 24 24" className="h-10 w-10 text-blue-400" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M3 10h18M7 15h1m4 0h5M5 6h14a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+          </svg>
+        </div>
+        <div className="flex flex-col gap-2">
+          <h2 className="text-2xl font-bold text-blue-400">Sold out — refunded</h2>
+          <p className="text-sm text-muted">
+            This item sold out just as your payment arrived. Your payment has been sent back
+            automatically to the address it came from.
+          </p>
+          {refunded.txHash && (
+            <p className="mt-1 break-all font-mono text-xs text-muted">TX: {refunded.txHash}</p>
+          )}
+        </div>
+        <Link
+          href="/#shop"
+          className="rounded-full border border-blue-500/30 bg-blue-500/10 px-6 py-2.5 text-sm font-semibold text-blue-400 transition-colors hover:bg-blue-500 hover:text-white"
         >
           {t("checkout.backToShop")}
         </Link>
@@ -348,6 +377,11 @@ function CheckoutContent() {
   function handleCancelled() {
     sessionStorage.removeItem(ORDER_STORAGE_KEY);
     setCancelled(true);
+  }
+
+  function handleRefunded(txHash?: string) {
+    sessionStorage.removeItem(ORDER_STORAGE_KEY);
+    setRefunded({ txHash });
   }
 
   return (
@@ -490,6 +524,7 @@ function CheckoutContent() {
               email={email}
               onPaid={handlePaid}
               onCancelled={handleCancelled}
+              onRefunded={orderSource === "platform" ? handleRefunded : undefined}
               pollFn={orderSource === "platform" ? getStoreOrder : undefined}
             />
           )}

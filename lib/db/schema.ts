@@ -249,6 +249,10 @@ export const storeStockItems = pgTable(
 );
 
 // ── Store: orders for platform-owned products (bot-independent) ────
+// Stock is never reserved at order creation — any number of buyers can pay
+// for a low-stock product concurrently. Whichever payments are CONFIRMED
+// first atomically claim a real stock item (see consumeOne); anyone whose
+// payment clears after the stock is gone gets auto-refunded on-chain.
 export const storeOrders = pgTable("store_orders", {
   id: uuid("id").defaultRandom().primaryKey(),
   productId: uuid("product_id")
@@ -259,10 +263,14 @@ export const storeOrders = pgTable("store_orders", {
   amountLtc: real("amount_ltc"),
   ltcAddress: text("ltc_address"),
   payPrivateKey: text("pay_private_key"), // AES-256-GCM encrypted
-  status: text("status").default("pending").notNull(), // pending | paid | expired
+  // pending | paid | expired | oversold_refunding | refunded | refund_failed
+  status: text("status").default("pending").notNull(),
   deliveredItem: text("delivered_item"),
   txHash: text("tx_hash"),
   confirmations: integer("confirmations").default(0),
+  // Populated only when the order is oversold and must be refunded.
+  refundAddress: text("refund_address"),
+  refundTxHash: text("refund_tx_hash"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

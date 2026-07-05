@@ -4,15 +4,45 @@ import { storeOrders, storeProducts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { generateWallet, getLtcPriceEur } from "@/lib/crypto/wallet";
 import { encryptSecret } from "@/lib/crypto/secrets";
-import { reserveOne, releaseReserved } from "@/lib/store/inventory";
+import { availableCount } from "@/lib/store/inventory";
 import { serverError } from "@/lib/http";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+function webhookSecret(): string {
+  return process.env.CASINO_WEBHOOK_SECRET || process.env.BOT_API_SECRET || process.env.PLATFORM_SECRET || "";
+}
+
+function baseUrl(): string {
+  const d = process.env.NEXT_PUBLIC_BASE_DOMAIN ?? "";
+  if (!d) return "";
+  return d.startsWith("http") ? d : `https://${d}`;
+}
+
+async function registerOrderWebhook(address: string, orderId: string) {
+  const token = process.env.BLOCKCYPHER_TOKEN;
+  const base = baseUrl();
+  const secret = webhookSecret();
+  if (!token || !base || !secret) return;
+  try {
+    const cb = `${base}/api/store/orders/webhook?s=${encodeURIComponent(secret)}&order=${encodeURIComponent(orderId)}`;
+    await fetch(`https://api.blockcypher.com/v1/ltc/main/hooks?token=${token}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "tx-confirmation", address, url: cb, confirmations: 1 }),
+    });
+  } catch {
+    // best-effort — the client poll is the fallback
+  }
+}
+
 /**
- * Creates a platform store order: reserves one stock unit, generates a
- * one-off LTC payment address, and returns it for the buyer to pay.
- * Entirely bot-independent — payment is watched by GET /api/store/orders/[id].
+ * Creates a store order. Stock is intentionally NOT reserved here: any
+ * number of buyers can pay concurrently for a low-stock product. Whichever
+ * payments are CONFIRMED first atomically claim the real stock (see
+ * lib/store/settle.ts) — anyone whose payment clears after stock is gone
+ * gets automatically refunded on-chain. The displayed stock count only ever
+ * reflects items actually delivered.
  */
 export async function POST(req: Request) {
   try {
@@ -33,43 +63,46 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "product not found" }, { status: 404 });
     }
 
+    // Entry gate only (not authoritative) — stops new checkouts once the
+    // product is genuinely sold out. The real allocation happens at settle time.
+    const stock = await availableCount(productId);
+    if (stock <= 0) {
+      return NextResponse.json({ error: "out of stock" }, { status: 409 });
+    }
+
     const ltcPrice = await getLtcPriceEur();
     if (!ltcPrice) {
       return NextResponse.json({ error: "price feed unavailable, try again shortly" }, { status: 503 });
     }
     const amountLtc = Number((product.price / ltcPrice).toFixed(8));
 
-    // Create the order row first so reserveOne has an order id to tag the item with.
-    const [order] = await db
-      .insert(storeOrders)
-      .values({ productId, buyerEmail: email, amountEur: product.price, amountLtc, status: "pending" })
-      .returning();
-
-    const reserved = await reserveOne(productId, order.id);
-    if (!reserved) {
-      await db.delete(storeOrders).where(eq(storeOrders.id, order.id));
-      return NextResponse.json({ error: "out of stock" }, { status: 409 });
-    }
-
     const wallet = await generateWallet("ltc");
     if (!wallet) {
-      await releaseReserved(order.id);
-      await db.delete(storeOrders).where(eq(storeOrders.id, order.id));
       return NextResponse.json({ error: "could not create payment wallet, try again" }, { status: 503 });
     }
 
-    const [updated] = await db
-      .update(storeOrders)
-      .set({ ltcAddress: wallet.address, payPrivateKey: encryptSecret(wallet.privateKey) })
-      .where(eq(storeOrders.id, order.id))
+    const [order] = await db
+      .insert(storeOrders)
+      .values({
+        productId,
+        buyerEmail: email,
+        amountEur: product.price,
+        amountLtc,
+        ltcAddress: wallet.address,
+        payPrivateKey: encryptSecret(wallet.privateKey),
+        status: "pending",
+      })
       .returning();
 
+    // Real-time payment detection (best-effort; the client poll is the fallback).
+    await registerOrderWebhook(wallet.address, order.id);
+
     return NextResponse.json({
-      orderId: updated.id,
-      address: updated.ltcAddress,
-      amountLtc: updated.amountLtc,
-      amountEur: updated.amountEur,
-      status: updated.status,
+      orderId: order.id,
+      address: order.ltcAddress,
+      amountLtc: order.amountLtc,
+      amountEur: order.amountEur,
+      status: order.status,
     });
   } catch (e) {
     return serverError("store/orders POST", e);

@@ -3608,15 +3608,20 @@ function OrdersView({
 }
 
 function OrderStatusBadge({ status }: { status: string }) {
-  // Simplified 3-state model: paid/delivered = Completed, expired/failed/
-  // cancelled = Cancelled (order wasn't paid within the 15-min window),
-  // everything else (pending/confirming) = Pending.
+  // paid/delivered = Completed. expired/failed/cancelled = Cancelled (never
+  // paid within the 15-min window). refunded = Refunded (paid, but arrived
+  // after stock sold out — auto-refunded on-chain to the sender). Anything
+  // still in flight (pending/settling/refunding) = Pending.
   const config =
     status === "paid" || status === "delivered"
       ? { bg: "bg-emerald-500/10", text: "text-emerald-400", dot: "bg-emerald-400", label: "Completed" }
       : status === "expired" || status === "failed" || status === "cancelled"
         ? { bg: "bg-rose-500/10", text: "text-rose-400", dot: "bg-rose-400", label: "Cancelled" }
-        : { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400", label: "Pending" };
+        : status === "refunded"
+          ? { bg: "bg-blue-500/10", text: "text-blue-400", dot: "bg-blue-400", label: "Refunded" }
+          : status === "refund_failed"
+            ? { bg: "bg-rose-500/10", text: "text-rose-400", dot: "bg-rose-400", label: "Refund failed" }
+            : { bg: "bg-amber-500/10", text: "text-amber-400", dot: "bg-amber-400", label: "Pending" };
   return (
     <span
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${config.bg} ${config.text}`}

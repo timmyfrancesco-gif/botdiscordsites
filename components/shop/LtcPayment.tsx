@@ -15,6 +15,10 @@ interface LtcPaymentProps {
   email?: string;
   onPaid: (deliveredItem?: string | null) => void;
   onCancelled: () => void;
+  /** Fired when the payment cleared after stock sold out and was auto-
+   * refunded on-chain (platform store orders only). Falls back to
+   * onCancelled if not provided. */
+  onRefunded?: (refundTxHash?: string) => void;
   /** Defaults to polling the bot's order-status endpoint; pass a different
    * function (e.g. getStoreOrder) for orders created outside the bot. */
   pollFn?: (orderId: string) => Promise<ProductOrderStatusResponse | null>;
@@ -107,7 +111,7 @@ function CircularProgress({ percentage }: { percentage: number }) {
   );
 }
 
-export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelled, pollFn = getProductOrder }: LtcPaymentProps) {
+export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelled, onRefunded, pollFn = getProductOrder }: LtcPaymentProps) {
   const { t } = useLocale();
   const [ltcEur, setLtcEur] = useState<number | null>(null);
   const [ltcUsd, setLtcUsd] = useState<number | null>(null);
@@ -116,8 +120,10 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
   const [requiredConfirmations, setRequiredConfirmations] = useState(1);
   const onPaidRef = useRef(onPaid);
   const onCancelledRef = useRef(onCancelled);
+  const onRefundedRef = useRef(onRefunded);
   onPaidRef.current = onPaid;
   onCancelledRef.current = onCancelled;
+  onRefundedRef.current = onRefunded;
   const [createdAt] = useState(() => new Date().toLocaleString());
 
   useEffect(() => {
@@ -149,16 +155,22 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
         setRequiredConfirmations(statusRes.requiredConfirmations);
       }
 
-      if (statusRes.status === "confirming") {
+      if (statusRes.status === "confirming" || statusRes.status === "settling") {
         setPhase("confirming");
       } else if (statusRes.status === "paid") {
         setPhase("done");
         clearInterval(interval);
         onPaidRef.current(statusRes.deliveredItem);
-      } else if (statusRes.status === "cancelled") {
+      } else if (statusRes.status === "refunded") {
+        clearInterval(interval);
+        if (onRefundedRef.current) onRefundedRef.current(statusRes.refundTxHash);
+        else onCancelledRef.current();
+      } else if (statusRes.status === "cancelled" || statusRes.status === "expired") {
         clearInterval(interval);
         onCancelledRef.current();
       }
+      // "oversold_refunding" / "refund_failed": the server retries the
+      // refund automatically on the next poll — keep waiting.
     }, POLL_INTERVAL_MS);
 
     return () => {

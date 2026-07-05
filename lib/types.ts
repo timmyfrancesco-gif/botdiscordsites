@@ -157,7 +157,16 @@ export interface ProductOrderResponse {
 }
 
 export interface ProductOrderStatusResponse {
-  status: "pending" | "confirming" | "paid" | "cancelled";
+  status:
+    | "pending"
+    | "confirming"
+    | "settling"
+    | "paid"
+    | "cancelled"
+    | "expired"
+    | "oversold_refunding"
+    | "refunded"
+    | "refund_failed";
   orderId?: string;
   productId?: string;
   amountEur?: number;
@@ -165,6 +174,7 @@ export interface ProductOrderStatusResponse {
   deliveredItem?: string | null;
   confirmations?: number;
   requiredConfirmations?: number;
+  refundTxHash?: string;
 }
 
 export interface WalletInfo {
