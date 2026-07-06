@@ -3,10 +3,6 @@
     {
       "path": "/api/platform/expire-orders",
       "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/casino/football/settle",
-      "schedule": "0 4 * * *"
     }
   ]
 }
