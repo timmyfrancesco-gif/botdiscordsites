@@ -8,7 +8,9 @@ export async function POST(req: Request) {
   try {
     const user = await getCasinoUser(req);
     if (!user) return NextResponse.json({ error: "unauthorized" }, { status: 401 });
-    const res = await creditDeposits(user.id);
+    const body = await req.json().catch(() => ({}));
+    const address = typeof body?.address === "string" ? body.address : undefined;
+    const res = await creditDeposits(user.id, address);
     const balanceCents = res.balanceCents ?? (await getBalanceCents(user));
     return NextResponse.json({ credited: res.credited, balanceCents });
   } catch (e) {

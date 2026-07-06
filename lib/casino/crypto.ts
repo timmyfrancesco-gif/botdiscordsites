@@ -50,11 +50,20 @@ export async function generateAddress(chain: Chain): Promise<GeneratedAddress | 
   }
 }
 
+// Short-lived cache so a webhook push and a client poll landing close together
+// (or several open tabs checking the same address) share one BlockCypher call.
+const receivedAtomicCache = new Map<string, { value: bigint; exp: number }>();
+const RECEIVED_ATOMIC_CACHE_MS = 15000;
+
 /**
  * Total amount ever received by an address, in atomic units (satoshi/wei),
  * as a BigInt string. Used to detect and credit new deposits idempotently.
  */
 export async function getTotalReceivedAtomic(chain: Chain, address: string): Promise<bigint | null> {
+  const cacheKey = `${chain}:${address}`;
+  const cached = receivedAtomicCache.get(cacheKey);
+  if (cached && cached.exp > Date.now()) return cached.value;
+
   const t = token();
   if (!t) return null;
   try {
@@ -62,11 +71,17 @@ export async function getTotalReceivedAtomic(chain: Chain, address: string): Pro
       `https://api.blockcypher.com/v1/${CHAINS[chain].bc}/addrs/${address}/balance?token=${t}`,
       { cache: "no-store" }
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (res.status === 429) console.error("[getTotalReceivedAtomic] BlockCypher rate limited");
+      return null;
+    }
     const data = await res.json();
     const received = data?.total_received;
     if (received === undefined || received === null) return null;
-    return BigInt(received);
+    const value = BigInt(received);
+    receivedAtomicCache.set(cacheKey, { value, exp: Date.now() + RECEIVED_ATOMIC_CACHE_MS });
+    if (receivedAtomicCache.size > 2000) receivedAtomicCache.clear();
+    return value;
   } catch {
     return null;
   }

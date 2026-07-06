@@ -62,10 +62,10 @@ export const casino = {
   bjState: () =>
     call<{ state: BlackjackView | null; balanceCents: number }>("/api/casino/blackjack/state"),
   wallets: () => call<{ wallets: WalletView[] }>("/api/casino/wallets"),
-  checkDeposits: () =>
+  checkDeposits: (address?: string) =>
     call<{ credited: { chain: string; eurCents: number }[]; balanceCents: number }>(
       "/api/casino/deposits/check",
-      { method: "POST" }
+      { method: "POST", body: JSON.stringify({ address }) }
     ),
   footballMatches: () =>
     call<{ matches: FootballMatch[]; configured: boolean }>("/api/casino/football/matches"),

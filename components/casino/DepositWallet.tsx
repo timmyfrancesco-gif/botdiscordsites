@@ -30,6 +30,8 @@ export default function DepositWallet({ wallets }: { wallets: WalletView[] | nul
   }, [wallets]);
 
   const current = wallets?.find((w) => w.chain === selected) ?? null;
+  const currentRef = useRef(current);
+  currentRef.current = current;
 
   useEffect(() => {
     if (!current) return;
@@ -42,7 +44,10 @@ export default function DepositWallet({ wallets }: { wallets: WalletView[] | nul
     setChecking(true);
     setError(null);
     try {
-      const r = await casino.checkDeposits();
+      // Only check the currently-viewed chain — checking all 5 on every poll
+      // burns 5x the BlockCypher quota for no benefit (the webhook handles
+      // real-time crediting for chains the user isn't looking at).
+      const r = await casino.checkDeposits(currentRef.current?.address);
       setBalance(r.balanceCents);
       if (r.credited.length > 0) {
         const total = r.credited.reduce((s, c) => s + c.eurCents, 0);
@@ -61,7 +66,7 @@ export default function DepositWallet({ wallets }: { wallets: WalletView[] | nul
   checkRef.current = check;
   useEffect(() => {
     if (!user) return;
-    const id = setInterval(() => checkRef.current(), 30000);
+    const id = setInterval(() => checkRef.current(), 60000);
     return () => clearInterval(id);
   }, [user]);
 
