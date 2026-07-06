@@ -102,18 +102,19 @@ export async function getLtcPriceEur(): Promise<number | null> {
 // couple seconds of each other (or several open checkout tabs watching the
 // same address) don't each burn a separate BlockCypher call — this is the
 // single biggest source of avoidable rate-limit pressure under load.
-const receivedCache = new Map<string, { value: { receivedLtc: number; confirmations: number }; exp: number }>();
+const receivedCache = new Map<string, { value: { receivedLtc: number; confirmations: number; unconfirmedLtc: number }; exp: number }>();
 const RECEIVED_CACHE_MS = 4000;
 
 /**
- * Total amount (in LTC) ever received by an address, plus the highest
- * confirmation count seen. Used by the settle endpoint as a defense-in-depth
- * check that an order was actually paid. Returns null if the lookup fails.
+ * Total amount (in LTC) ever received by an address, the highest
+ * confirmation count seen, and the still-unconfirmed (mempool) amount.
+ * Used by the settle endpoint as a defense-in-depth check that an order was
+ * actually paid. Returns null if the lookup fails.
  */
 export async function getAddressReceived(
   chain: "ltc" | "btc",
   address: string
-): Promise<{ receivedLtc: number; confirmations: number } | null> {
+): Promise<{ receivedLtc: number; confirmations: number; unconfirmedLtc: number } | null> {
   const cacheKey = `${chain}:${address}`;
   const cached = receivedCache.get(cacheKey);
   if (cached && cached.exp > Date.now()) return cached.value;
@@ -132,6 +133,7 @@ export async function getAddressReceived(
     const data = await res.json();
     const litoshis = Number(data?.total_received ?? 0);
     if (!Number.isFinite(litoshis)) return null;
+    const unconfirmedLitoshis = Number(data?.unconfirmed_balance ?? 0);
     // Highest confirmation count across recent txrefs
     let confirmations = 0;
     const refs = Array.isArray(data?.txrefs) ? data.txrefs : [];
@@ -139,7 +141,11 @@ export async function getAddressReceived(
       const c = Number(r?.confirmations ?? 0);
       if (Number.isFinite(c) && c > confirmations) confirmations = c;
     }
-    const value = { receivedLtc: litoshis / 1e8, confirmations };
+    const value = {
+      receivedLtc: litoshis / 1e8,
+      confirmations,
+      unconfirmedLtc: Number.isFinite(unconfirmedLitoshis) ? unconfirmedLitoshis / 1e8 : 0,
+    };
     receivedCache.set(cacheKey, { value, exp: Date.now() + RECEIVED_CACHE_MS });
     if (receivedCache.size > 2000) receivedCache.clear();
     return value;

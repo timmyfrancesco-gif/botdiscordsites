@@ -17,6 +17,7 @@ const VALID_PREV: Record<string, string[]> = {
 };
 
 const MIN_CONFIRMATIONS = Number(process.env.LTC_MIN_CONFIRMATIONS ?? "1");
+const ZERO_CONF_THRESHOLD_EUR = Number(process.env.LTC_ZERO_CONF_THRESHOLD_EUR ?? "20");
 const AMOUNT_TOLERANCE = 0.01; // 1% to absorb rounding / network fees
 
 /**
@@ -59,6 +60,7 @@ export async function POST(
         prev: tenantOrders.status,
         payAddress: tenantOrders.ltcAddress,
         amountLtc: tenantOrders.amountLtc,
+        amountEur: tenantOrders.amountEur,
         method: tenantOrders.method,
       })
       .from(tenantOrders)
@@ -84,11 +86,14 @@ export async function POST(
     if ((status === "paid" || status === "delivered") && order.method !== "paypal") {
       const received = await getAddressReceived("ltc", order.payAddress);
       if (received) {
+        const requiredConfirmations = order.amountEur < ZERO_CONF_THRESHOLD_EUR ? 0 : MIN_CONFIRMATIONS;
+        const effectiveReceivedLtc =
+          requiredConfirmations === 0 ? received.receivedLtc + received.unconfirmedLtc : received.receivedLtc;
         const required = (order.amountLtc ?? 0) * (1 - AMOUNT_TOLERANCE);
         if (
           !order.amountLtc ||
-          received.receivedLtc < required ||
-          received.confirmations < MIN_CONFIRMATIONS
+          effectiveReceivedLtc < required ||
+          received.confirmations < requiredConfirmations
         ) {
           return NextResponse.json(
             {
