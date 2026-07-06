@@ -149,6 +149,10 @@ export interface ProductOrderResponse {
   orderId: string;
   address: string;
   amountEur: number;
+  // Exact LTC amount locked in server-side at order creation — the same
+  // value settle checks on-chain. Present on platform (store) orders; bot
+  // orders may not return it, in which case the client derives an estimate.
+  amountLtc?: number;
   productName?: string;
   // Present on PayPal (Friends & Family) orders returned by the bot.
   method?: "ltc" | "paypal";

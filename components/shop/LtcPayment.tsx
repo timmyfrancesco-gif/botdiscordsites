@@ -156,8 +156,16 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
   }, [order]);
 
   const displayEur = order.amountEur > 0 ? order.amountEur : (cartTotal ?? order.amountEur);
-  const approxLtc = ltcEur && displayEur > 0 ? (displayEur / ltcEur).toFixed(8) : null;
-  const approxUsd = ltcUsd && ltcEur && displayEur > 0 ? (displayEur * (ltcUsd / ltcEur)) : null;
+  // Prefer the exact amount locked in server-side at order creation (the
+  // same value settle checks on-chain) over recomputing it from a
+  // separately-fetched, possibly stale, price — that mismatch is what made
+  // the displayed amount look "off" from what actually had to be paid.
+  const approxLtc = order.amountLtc
+    ? order.amountLtc.toFixed(8)
+    : ltcEur && displayEur > 0 ? (displayEur / ltcEur).toFixed(8) : null;
+  const approxUsd = order.amountLtc && ltcUsd
+    ? order.amountLtc * ltcUsd
+    : ltcUsd && ltcEur && displayEur > 0 ? (displayEur * (ltcUsd / ltcEur)) : null;
   const qrCode = useQrCode(
     approxLtc ? `litecoin:${order.address}?amount=${approxLtc}` : null,
   );
