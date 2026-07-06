@@ -98,6 +98,13 @@ export async function getLtcPriceEur(): Promise<number | null> {
   return null;
 }
 
+// Short-lived cache so a webhook firing and a client poll landing within a
+// couple seconds of each other (or several open checkout tabs watching the
+// same address) don't each burn a separate BlockCypher call — this is the
+// single biggest source of avoidable rate-limit pressure under load.
+const receivedCache = new Map<string, { value: { receivedLtc: number; confirmations: number }; exp: number }>();
+const RECEIVED_CACHE_MS = 4000;
+
 /**
  * Total amount (in LTC) ever received by an address, plus the highest
  * confirmation count seen. Used by the settle endpoint as a defense-in-depth
@@ -107,6 +114,10 @@ export async function getAddressReceived(
   chain: "ltc" | "btc",
   address: string
 ): Promise<{ receivedLtc: number; confirmations: number } | null> {
+  const cacheKey = `${chain}:${address}`;
+  const cached = receivedCache.get(cacheKey);
+  if (cached && cached.exp > Date.now()) return cached.value;
+
   const token = process.env.BLOCKCYPHER_TOKEN;
   if (!token) return null;
   try {
@@ -114,7 +125,10 @@ export async function getAddressReceived(
       `https://api.blockcypher.com/v1/${chain}/main/addrs/${address}?token=${token}`,
       { cache: "no-store" }
     );
-    if (!res.ok) return null;
+    if (!res.ok) {
+      if (res.status === 429) console.error("[getAddressReceived] BlockCypher rate limited");
+      return null;
+    }
     const data = await res.json();
     const litoshis = Number(data?.total_received ?? 0);
     if (!Number.isFinite(litoshis)) return null;
@@ -125,7 +139,10 @@ export async function getAddressReceived(
       const c = Number(r?.confirmations ?? 0);
       if (Number.isFinite(c) && c > confirmations) confirmations = c;
     }
-    return { receivedLtc: litoshis / 1e8, confirmations };
+    const value = { receivedLtc: litoshis / 1e8, confirmations };
+    receivedCache.set(cacheKey, { value, exp: Date.now() + RECEIVED_CACHE_MS });
+    if (receivedCache.size > 2000) receivedCache.clear();
+    return value;
   } catch {
     return null;
   }

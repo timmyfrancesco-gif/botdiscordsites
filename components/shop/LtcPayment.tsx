@@ -22,6 +22,10 @@ interface LtcPaymentProps {
   /** Defaults to polling the bot's order-status endpoint; pass a different
    * function (e.g. getStoreOrder) for orders created outside the bot. */
   pollFn?: (orderId: string) => Promise<ProductOrderStatusResponse | null>;
+  /** Poll cadence override. Platform (store) orders also get a BlockCypher
+   * webhook push on payment, so they can poll less often than bot orders,
+   * which have no fast path and rely on this interval alone. */
+  pollIntervalMs?: number;
 }
 
 type PaymentPhase = "waiting" | "confirming" | "done";
@@ -111,7 +115,7 @@ function CircularProgress({ percentage }: { percentage: number }) {
   );
 }
 
-export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelled, onRefunded, pollFn = getProductOrder }: LtcPaymentProps) {
+export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelled, onRefunded, pollFn = getProductOrder, pollIntervalMs = POLL_INTERVAL_MS }: LtcPaymentProps) {
   const { t } = useLocale();
   const [ltcEur, setLtcEur] = useState<number | null>(null);
   const [ltcUsd, setLtcUsd] = useState<number | null>(null);
@@ -171,7 +175,7 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
       }
       // "oversold_refunding" / "refund_failed": the server retries the
       // refund automatically on the next poll — keep waiting.
-    }, POLL_INTERVAL_MS);
+    }, pollIntervalMs);
 
     return () => {
       cancelled = true;

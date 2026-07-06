@@ -526,6 +526,7 @@ function CheckoutContent() {
               onCancelled={handleCancelled}
               onRefunded={orderSource === "platform" ? handleRefunded : undefined}
               pollFn={orderSource === "platform" ? getStoreOrder : undefined}
+              pollIntervalMs={orderSource === "platform" ? 12000 : undefined}
             />
           )}
         </div>
