@@ -541,7 +541,7 @@ function CheckoutContent() {
               onManualRefund={orderSource === "platform" ? handleManualRefund : undefined}
               onSubmitTxid={orderSource === "platform" ? confirmFallbackTx : undefined}
               pollFn={orderSource === "platform" ? getStoreOrder : undefined}
-              pollIntervalMs={orderSource === "platform" ? (isFallbackOrder ? 5000 : 12000) : undefined}
+              pollIntervalMs={orderSource === "platform" ? (isFallbackOrder ? 5000 : 20000) : undefined}
               isFallback={isFallbackOrder}
             />
           )}

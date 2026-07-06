@@ -619,6 +619,19 @@ function AdminPanel() {
       if (saved) setActiveNavState(saved);
     } catch {}
   }, []);
+  const activeNavRef = useRef(activeNav);
+  activeNavRef.current = activeNav;
+  // Fetch the platform wallet balance (hits BlockCypher) the moment the
+  // Wallet section is opened, rather than waiting for the next 60s
+  // auto-refresh tick (which itself only includes this call while the
+  // section stays active — see refresh() below).
+  useEffect(() => {
+    if (activeNav !== "wallet") return;
+    fetch("/api/admin/platform-wallet")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d) setPlatWallet(d); })
+      .catch(() => {});
+  }, [activeNav]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<ApiProduct | null>(null);
   const [modal, setModal] = useState<ModalKind | null>(null);
@@ -681,9 +694,13 @@ function AdminPanel() {
       setBotOnline(healthRes?.ok ?? false);
 
       // Real platform data (tenant_orders DB) — preferred over bot feed.
+      // Platform wallet hits BlockCypher, so only refresh it while the
+      // Wallet section is actually being viewed, not on every 60s tick.
       const [ovRes, pwRes] = await Promise.all([
         fetch("/api/admin/overview").then((r) => (r.ok ? r.json() : null)).catch(() => null),
-        fetch("/api/admin/platform-wallet").then((r) => (r.ok ? r.json() : null)).catch(() => null),
+        activeNavRef.current === "wallet"
+          ? fetch("/api/admin/platform-wallet").then((r) => (r.ok ? r.json() : null)).catch(() => null)
+          : Promise.resolve(null),
       ]);
       if (ovRes) setOverview(ovRes);
       if (pwRes) setPlatWallet(pwRes);

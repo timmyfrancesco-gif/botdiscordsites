@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { getLtcPrice, getProductOrder } from "@/lib/api";
+import { getLivePrice, getProductOrder } from "@/lib/api";
 import { formatEur, formatUsd } from "@/lib/format";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useQrCode } from "@/lib/hooks/useQrCode";
@@ -147,12 +147,22 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
   const [createdAt] = useState(() => new Date().toLocaleString());
 
   useEffect(() => {
-    getLtcPrice().then((res) => {
-      if (res) {
+    let cancelled = false;
+    function fetchPrice() {
+      getLivePrice().then((res) => {
+        if (cancelled || !res) return;
         setLtcEur(res.eur);
         setLtcUsd(res.usd);
-      }
-    });
+      });
+    }
+    fetchPrice();
+    // CoinGecko/Binance, not BlockCypher — safe to refresh regularly so the
+    // displayed rate never goes stale while the buyer is on this screen.
+    const id = setInterval(fetchPrice, 30000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
   }, [order]);
 
   const displayEur = order.amountEur > 0 ? order.amountEur : (cartTotal ?? order.amountEur);

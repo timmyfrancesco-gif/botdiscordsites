@@ -105,37 +105,60 @@ export async function getTxDetails(chain: "ltc" | "btc", txid: string): Promise<
   }
 }
 
+export interface LtcPrices {
+  eur: number;
+  usd: number;
+}
+
+// CoinGecko/Binance aren't BlockCypher — they don't share its rate limit —
+// but a tiny cache still avoids hammering them if several pages request the
+// price within the same second.
+let ltcPricesCache: { value: LtcPrices; exp: number } | null = null;
+const LTC_PRICES_CACHE_MS = 5000;
+
 /**
- * Current LTC price in EUR. Tries CoinGecko, then Binance (LTCEUR) as a
- * fallback. Returns null only if every source is unavailable so callers can
- * fail the order rather than quote a wrong amount.
+ * Current LTC price in EUR and USD, always live (CoinGecko primary, Binance
+ * spot as fallback). Used both to quote orders and to display an always-
+ * fresh price on the checkout page — never derive it from a third-party
+ * feed (e.g. the bot's own price endpoint) that might lag behind this.
  */
-export async function getLtcPriceEur(): Promise<number | null> {
-  // Primary: CoinGecko
+export async function getLtcPrices(): Promise<LtcPrices | null> {
+  if (ltcPricesCache && ltcPricesCache.exp > Date.now()) return ltcPricesCache.value;
+
+  // Primary: CoinGecko (both currencies in one call)
   try {
     const res = await fetch(
-      "https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=eur",
+      "https://api.coingecko.com/api/v3/simple/price?ids=litecoin&vs_currencies=eur,usd",
       { cache: "no-store" }
     );
     if (res.ok) {
       const data = await res.json();
-      const price = data?.litecoin?.eur;
-      if (typeof price === "number" && price > 0) return price;
+      const eur = data?.litecoin?.eur;
+      const usd = data?.litecoin?.usd;
+      if (typeof eur === "number" && eur > 0 && typeof usd === "number" && usd > 0) {
+        const value = { eur, usd };
+        ltcPricesCache = { value, exp: Date.now() + LTC_PRICES_CACHE_MS };
+        return value;
+      }
     }
   } catch {
     // fall through to backup
   }
 
-  // Backup: Binance spot
+  // Backup: Binance spot (EUR and USDT pairs)
   try {
-    const res = await fetch(
-      "https://api.binance.com/api/v3/ticker/price?symbol=LTCEUR",
-      { cache: "no-store" }
-    );
-    if (res.ok) {
-      const data = await res.json();
-      const price = Number(data?.price);
-      if (Number.isFinite(price) && price > 0) return price;
+    const [eurRes, usdRes] = await Promise.all([
+      fetch("https://api.binance.com/api/v3/ticker/price?symbol=LTCEUR", { cache: "no-store" }),
+      fetch("https://api.binance.com/api/v3/ticker/price?symbol=LTCUSDT", { cache: "no-store" }),
+    ]);
+    const eurData = eurRes.ok ? await eurRes.json() : null;
+    const usdData = usdRes.ok ? await usdRes.json() : null;
+    const eur = Number(eurData?.price);
+    const usd = Number(usdData?.price);
+    if (Number.isFinite(eur) && eur > 0 && Number.isFinite(usd) && usd > 0) {
+      const value = { eur, usd };
+      ltcPricesCache = { value, exp: Date.now() + LTC_PRICES_CACHE_MS };
+      return value;
     }
   } catch {
     // give up
@@ -144,12 +167,17 @@ export async function getLtcPriceEur(): Promise<number | null> {
   return null;
 }
 
+/** EUR-only convenience wrapper for callers that don't need the USD price. */
+export async function getLtcPriceEur(): Promise<number | null> {
+  return (await getLtcPrices())?.eur ?? null;
+}
+
 // Short-lived cache so a webhook firing and a client poll landing within a
 // couple seconds of each other (or several open checkout tabs watching the
 // same address) don't each burn a separate BlockCypher call — this is the
 // single biggest source of avoidable rate-limit pressure under load.
 const receivedCache = new Map<string, { value: { receivedLtc: number; confirmations: number; unconfirmedLtc: number }; exp: number }>();
-const RECEIVED_CACHE_MS = 4000;
+const RECEIVED_CACHE_MS = 8000;
 
 /**
  * Total amount (in LTC) ever received by an address, the highest

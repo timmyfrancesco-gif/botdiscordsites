@@ -138,6 +138,21 @@ export function getLtcPrice(): Promise<LtcResponse | null> {
   return apiFetch<LtcResponse>("/api/ltc");
 }
 
+/**
+ * Always-live LTC price (CoinGecko/Binance) from this site's own endpoint —
+ * used on the checkout page instead of getLtcPrice, which can lag behind the
+ * rate actually used server-side to compute the order amount.
+ */
+export async function getLivePrice(): Promise<{ eur: number; usd: number } | null> {
+  try {
+    const res = await fetch("/api/ltc-price", { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as { eur: number; usd: number };
+  } catch {
+    return null;
+  }
+}
+
 export function getFeed(limit = 15): Promise<FeedResponse | null> {
   return apiFetch<FeedResponse>(`/api/feed?limit=${limit}`);
 }
