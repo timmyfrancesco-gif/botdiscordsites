@@ -5,6 +5,7 @@ const ar: Record<string, string> = {
   "nav.products": "المنتجات",
   "nav.features": "المزايا",
   "nav.faq": "الأسئلة الشائعة",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "التقييمات",
   "nav.trackOrder": "تتبع الطلب",
   "nav.terms": "شروط الخدمة",

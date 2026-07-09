@@ -5,6 +5,7 @@ const sv: Record<string, string> = {
   "nav.products": "Produkter",
   "nav.features": "Funktioner",
   "nav.faq": "FAQ",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "Omdömen",
   "nav.trackOrder": "Spåra beställning",
   "nav.terms": "Användarvillkor",

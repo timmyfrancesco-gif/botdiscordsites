@@ -5,6 +5,7 @@ const tr: Record<string, string> = {
   "nav.products": "Ürünler",
   "nav.features": "Özellikler",
   "nav.faq": "SSS",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "Değerlendirmeler",
   "nav.trackOrder": "Sipariş Takibi",
   "nav.terms": "Hizmet Şartları",

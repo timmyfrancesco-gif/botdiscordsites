@@ -5,6 +5,7 @@ const cs: Record<string, string> = {
   "nav.products": "Produkty",
   "nav.features": "Funkce",
   "nav.faq": "Časté dotazy",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "Recenze",
   "nav.trackOrder": "Sledovat objednávku",
   "nav.terms": "Podmínky služby",

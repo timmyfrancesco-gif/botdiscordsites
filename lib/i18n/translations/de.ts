@@ -4,6 +4,7 @@ const de: Record<string, string> = {
   "nav.products": "Produkte",
   "nav.features": "Funktionen",
   "nav.faq": "FAQ",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "Bewertungen",
   "nav.trackOrder": "Bestellung Verfolgen",
   "nav.terms": "Nutzungsbedingungen",

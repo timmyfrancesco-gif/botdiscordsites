@@ -5,6 +5,7 @@ const th: Record<string, string> = {
   "nav.products": "สินค้า",
   "nav.features": "ฟีเจอร์",
   "nav.faq": "FAQ",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "รีวิว",
   "nav.trackOrder": "ติดตามคำสั่งซื้อ",
   "nav.terms": "ข้อกำหนดการใช้บริการ",

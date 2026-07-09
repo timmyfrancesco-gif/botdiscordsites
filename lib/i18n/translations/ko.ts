@@ -5,6 +5,7 @@ const ko: Record<string, string> = {
   "nav.products": "제품",
   "nav.features": "기능",
   "nav.faq": "FAQ",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "리뷰",
   "nav.trackOrder": "주문 추적",
   "nav.terms": "이용약관",

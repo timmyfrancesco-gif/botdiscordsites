@@ -4,6 +4,7 @@ const ja: Record<string, string> = {
   "nav.products": "商品",
   "nav.features": "機能",
   "nav.faq": "よくある質問",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "レビュー",
   "nav.trackOrder": "注文追跡",
   "nav.terms": "利用規約",

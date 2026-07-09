@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useDcnPrice } from "@/lib/hooks/useDcnPrice";
 import { formatEur } from "@/lib/format";
 import Sparkline from "@/components/ui/Sparkline";
@@ -15,7 +16,10 @@ export default function DcnWidget() {
   const isUp = (changePct ?? 0) >= 0;
 
   return (
-    <div className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-background-elevated/40 p-4">
+    <Link
+      href="/dcoin"
+      className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-background-elevated/40 p-4 transition-colors hover:border-accent/40"
+    >
       <div>
         <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">D-Coin · DCN</p>
         <p className="mt-1 text-2xl font-bold text-foreground">
@@ -28,6 +32,6 @@ export default function DcnWidget() {
         )}
       </div>
       <Sparkline values={history.map((p) => p.price)} positive={isUp} width={140} height={44} />
-    </div>
+    </Link>
   );
 }

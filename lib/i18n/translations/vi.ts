@@ -5,6 +5,7 @@ const vi: Record<string, string> = {
   "nav.products": "Sản phẩm",
   "nav.features": "Tính năng",
   "nav.faq": "Câu hỏi thường gặp",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "Đánh giá",
   "nav.trackOrder": "Theo dõi đơn hàng",
   "nav.terms": "Điều khoản dịch vụ",

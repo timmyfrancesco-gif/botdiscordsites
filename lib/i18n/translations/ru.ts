@@ -4,6 +4,7 @@ const ru: Record<string, string> = {
   "nav.products": "Товары",
   "nav.features": "Возможности",
   "nav.faq": "FAQ",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "Отзывы",
   "nav.trackOrder": "Отследить заказ",
   "nav.terms": "Условия использования",

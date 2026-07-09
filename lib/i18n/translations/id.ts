@@ -5,6 +5,7 @@ const id: Record<string, string> = {
   "nav.products": "Produk",
   "nav.features": "Fitur",
   "nav.faq": "FAQ",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "Ulasan",
   "nav.trackOrder": "Lacak Pesanan",
   "nav.terms": "Ketentuan Layanan",

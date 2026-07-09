@@ -4,6 +4,7 @@ const zh: Record<string, string> = {
   "nav.products": "产品",
   "nav.features": "功能",
   "nav.faq": "常见问题",
+  "nav.dcoin": "D-Coin",
   "nav.reviews": "评价",
   "nav.trackOrder": "追踪订单",
   "nav.terms": "服务条款",
