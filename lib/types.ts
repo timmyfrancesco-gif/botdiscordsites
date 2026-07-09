@@ -21,7 +21,6 @@ export interface LtcResponse {
 
 export interface DcnPriceResponse {
   price: number | null;
-  ltcPrice: number | null;
   updatedAt: number | null;
 }
 

@@ -142,11 +142,19 @@ export function getLtcPrice(): Promise<LtcResponse | null> {
 }
 
 /**
- * D-Coin (DCN) — bot-managed internal currency. Price follows LTC/EUR with a
- * platform margin (70% up / 130% down) and is recalculated bot-side every 5s.
+ * D-Coin (DCN) — bot-managed internal currency, recalculated bot-side every
+ * 5s. Routed through this site's own /api/dcn/price (not apiFetch straight
+ * to the bot) so the response can be stripped of internal pricing fields
+ * before it ever reaches the browser.
  */
-export function getDcnPrice(): Promise<DcnPriceResponse | null> {
-  return apiFetch<DcnPriceResponse>("/api/dcn/price");
+export async function getDcnPrice(): Promise<DcnPriceResponse | null> {
+  try {
+    const res = await fetch("/api/dcn/price", { cache: "no-store" });
+    if (!res.ok) return null;
+    return (await res.json()) as DcnPriceResponse;
+  } catch {
+    return null;
+  }
 }
 
 export function getDcnHistory(limit = 200): Promise<DcnHistoryResponse | null> {

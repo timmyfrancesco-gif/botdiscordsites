@@ -6,10 +6,9 @@ import { formatEur } from "@/lib/format";
 import Sparkline from "@/components/ui/Sparkline";
 
 /**
- * Live D-Coin (DCN) price card — a bot-managed internal currency pegged to
- * LTC/EUR with a platform margin (70% up / 130% down moves), recalculated
- * bot-side every 5s. Purely informational; balances/purchases are handled
- * elsewhere (checkout D-Coin panel, Discord commands).
+ * Live D-Coin (DCN) price card — a bot-managed internal currency,
+ * recalculated bot-side every 5s. Purely informational; balances/purchases
+ * are handled elsewhere (checkout D-Coin panel, Discord commands).
  */
 export default function DcnWidget() {
   const { price, changePct, history, loading } = useDcnPrice();

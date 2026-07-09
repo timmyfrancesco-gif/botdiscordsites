@@ -60,9 +60,8 @@ function DcoinContent() {
       <div>
         <h1 className="text-2xl font-bold text-foreground">D-Coin · DCN</h1>
         <p className="mt-1 text-sm text-muted">
-          Our internal platform currency. Its price follows LTC/EUR — moving up at 70% of LTC&apos;s
-          gain and down at 130% of LTC&apos;s drop — recalculated every 5 seconds. Pay with D-Coin
-          anywhere on the site for a 10% discount.
+          Our internal platform currency, with a live price that updates every few seconds. Pay with
+          D-Coin anywhere on the site for a 10% discount.
         </p>
       </div>
 
@@ -140,6 +139,26 @@ function DcoinContent() {
         ) : null}
       </div>
 
+      {/* Buy / recharge */}
+      <div className="rounded-2xl border border-accent/30 bg-accent/5 p-6">
+        <p className="text-[11px] font-semibold uppercase tracking-widest text-accent">Buy D-Coin</p>
+        <p className="mt-2 text-sm text-muted">
+          Recharge your D-Coin balance by paying in LTC — minimum €5, credited automatically. Run this
+          command in our Discord server:
+        </p>
+        <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2">
+          <code className="flex-1 font-mono text-sm text-foreground">,dcnrecharge [amount]</code>
+        </div>
+        <a
+          href={SITE.discordInvite}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-3 block rounded-full bg-accent py-2.5 text-center text-sm font-semibold text-background transition-opacity hover:opacity-90"
+        >
+          Open Discord to recharge
+        </a>
+      </div>
+
       {/* How it works */}
       <div className="rounded-2xl border border-border bg-background-elevated/40 p-6">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">How it works</p>
@@ -154,8 +173,8 @@ function DcoinContent() {
             order.
           </li>
           <li>
-            <span className="text-foreground">Price:</span> tracks LTC/EUR with a platform margin — DCN
-            rises at 70% of an LTC gain and falls at 130% of an LTC drop, recalculated every 5 seconds.
+            <span className="text-foreground">Price:</span> set by the platform and recalculated every 5
+            seconds.
           </li>
           <li>
             <span className="text-foreground">Completing a D-Coin purchase</span> is currently handled by

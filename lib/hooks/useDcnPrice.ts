@@ -9,7 +9,6 @@ const HISTORY_POLL_MS = 60_000; // history is sampled once/minute bot-side
 
 export interface DcnPriceState {
   price: number | null;
-  ltcPrice: number | null;
   updatedAt: number | null;
   history: DcnHistoryPoint[];
   /** % change from the oldest point currently loaded to the live price. */
@@ -19,7 +18,6 @@ export interface DcnPriceState {
 
 export function useDcnPrice(historyLimit = 200): DcnPriceState {
   const [price, setPrice] = useState<number | null>(null);
-  const [ltcPrice, setLtcPrice] = useState<number | null>(null);
   const [updatedAt, setUpdatedAt] = useState<number | null>(null);
   const [history, setHistory] = useState<DcnHistoryPoint[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,7 +30,6 @@ export function useDcnPrice(historyLimit = 200): DcnPriceState {
       const res = await getDcnPrice();
       if (cancelled || !res) return;
       setPrice(res.price);
-      setLtcPrice(res.ltcPrice);
       setUpdatedAt(res.updatedAt);
       loadedOnce.current = true;
       setLoading(false);
@@ -59,5 +56,5 @@ export function useDcnPrice(historyLimit = 200): DcnPriceState {
   const first = history[0]?.price;
   const changePct = price !== null && first ? ((price - first) / first) * 100 : null;
 
-  return { price, ltcPrice, updatedAt, history, changePct, loading };
+  return { price, updatedAt, history, changePct, loading };
 }
