@@ -9,6 +9,13 @@ import {
 const API_BASE = (process.env.NEXT_PUBLIC_ASTRO_API_URL ?? "").replace(/\/+$/, "");
 const DASHBOARD_PASSWORD =
   process.env.DASHBOARD_PASSWORD ?? process.env.NEXT_PUBLIC_DASHBOARD_PASSWORD ?? "";
+// Site accounts (by email) that always get dashboard access, independent of
+// the bot's own "role" field — the owner shouldn't depend on the bot's user
+// database being set up correctly.
+const OWNER_EMAILS = (process.env.OWNER_EMAILS ?? "")
+  .split(",")
+  .map((e) => e.trim().toLowerCase())
+  .filter(Boolean);
 
 // Establishes an httpOnly admin session cookie after verifying either the
 // dashboard password (checked server-side) or an admin-role login JWT.
@@ -37,8 +44,10 @@ export async function POST(req: NextRequest) {
       });
       if (res.ok) {
         const data = await res.json().catch(() => null);
-        const role = data?.role ?? data?.user?.role;
-        ok = role === "admin";
+        const user = data?.user ?? data;
+        const role = user?.role;
+        const email = typeof user?.email === "string" ? user.email.toLowerCase() : "";
+        ok = role === "admin" || (email !== "" && OWNER_EMAILS.includes(email));
       }
     } catch {
       ok = false;

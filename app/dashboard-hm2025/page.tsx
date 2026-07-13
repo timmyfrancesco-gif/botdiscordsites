@@ -464,23 +464,31 @@ function SparkLine({
 export default function SecretDashboardPage() {
   const { user, token, loading } = useAuth();
   const [pwUnlocked, setPwUnlocked] = useState(false);
+  const [tokenUnlocked, setTokenUnlocked] = useState(false);
   const [pwInput, setPwInput] = useState("");
   const [pwError, setPwError] = useState(false);
   const [pwBusy, setPwBusy] = useState(false);
 
   const isAdmin = user?.role === "admin";
-  const hasAccess = isAdmin || pwUnlocked;
+  const hasAccess = isAdmin || pwUnlocked || tokenUnlocked;
 
-  // Admin-role users: establish the httpOnly admin session cookie so that
-  // privileged proxy/transcript calls are authorized server-side.
+  // Any logged-in site account: ask the server whether it should get admin
+  // access — either the bot's own "admin" role, or a hardcoded owner email
+  // (OWNER_EMAILS), decided server-side in /api/admin/unlock. Establishes
+  // the httpOnly admin session cookie needed for privileged proxy/transcript
+  // calls when granted.
   useEffect(() => {
-    if (!isAdmin || !token) return;
+    if (!token) return;
     fetch("/api/admin/unlock", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token }),
-    }).catch(() => {});
-  }, [isAdmin, token]);
+    })
+      .then((res) => {
+        if (res.ok) setTokenUnlocked(true);
+      })
+      .catch(() => {});
+  }, [token]);
 
   async function handlePasswordSubmit(e: React.FormEvent) {
     e.preventDefault();
