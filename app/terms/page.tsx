@@ -40,6 +40,8 @@ interface TosEntry {
   html: string;
   updatedAt: string | null;
   authorName: string | null;
+  avatarUrl: string | null;
+  bannerUrl: string | null;
 }
 
 type TosData = Record<"general" | "owner1" | "owner2", TosEntry>;
@@ -59,21 +61,48 @@ function formatDate(iso: string): string {
 }
 
 function TosCategoryCard({ categoryKey, entry }: { categoryKey: keyof TosData; entry: TosEntry | undefined }) {
-  const label = entry?.authorName ? `${TOS_LABELS[categoryKey]} — ${entry.authorName}` : TOS_LABELS[categoryKey];
+  const hasAuthor = Boolean(entry?.authorName || entry?.avatarUrl);
+
   return (
-    <div className="rounded-2xl border border-border bg-background-elevated/40 p-6">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h3 className="text-base font-semibold text-foreground">{label}</h3>
-        {entry?.updatedAt && (
-          <span className="text-xs text-muted">Updated {formatDate(entry.updatedAt)}</span>
-        )}
-      </div>
-      <div className="mt-3">
-        {entry?.html ? (
-          <div className="discord-content" dangerouslySetInnerHTML={{ __html: entry.html }} />
-        ) : (
-          <p className="text-sm text-muted">Not set yet.</p>
-        )}
+    <div className="overflow-hidden rounded-2xl border border-border bg-background-elevated/40">
+      {hasAuthor && (
+        <div className="relative">
+          <div
+            className="h-20 w-full sm:h-24"
+            style={
+              entry?.bannerUrl
+                ? { backgroundImage: `url(${entry.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
+                : { background: "linear-gradient(135deg, var(--accent), var(--casino-from))" }
+            }
+          />
+          {entry?.avatarUrl && (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src={entry.avatarUrl}
+              alt=""
+              className="absolute left-4 -bottom-6 h-14 w-14 rounded-full border-4 border-background-elevated object-cover sm:left-6"
+            />
+          )}
+        </div>
+      )}
+
+      <div className={`p-6 ${hasAuthor ? "pt-9 sm:pl-8" : ""}`}>
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h3 className="text-base font-semibold text-foreground">{TOS_LABELS[categoryKey]}</h3>
+            {entry?.authorName && <p className="text-xs text-muted">Set by {entry.authorName}</p>}
+          </div>
+          {entry?.updatedAt && (
+            <span className="text-xs text-muted">Updated {formatDate(entry.updatedAt)}</span>
+          )}
+        </div>
+        <div className="mt-3">
+          {entry?.html ? (
+            <div className="discord-content" dangerouslySetInnerHTML={{ __html: entry.html }} />
+          ) : (
+            <p className="text-sm text-muted">Not set yet.</p>
+          )}
+        </div>
       </div>
     </div>
   );

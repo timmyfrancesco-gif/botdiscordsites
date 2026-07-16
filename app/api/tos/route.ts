@@ -14,7 +14,18 @@ interface TosEntry {
   content: string;
   authorId: string | null;
   authorName: string | null;
+  avatarUrl: string | null;
+  bannerUrl: string | null;
   updatedAt: string;
+}
+
+function isHttpsUrl(v: unknown): v is string {
+  if (typeof v !== "string" || v.length > 2048) return false;
+  try {
+    return new URL(v).protocol === "https:";
+  } catch {
+    return false;
+  }
 }
 
 // Same bearer-token pattern as /api/transcripts: the bot posts with
@@ -33,10 +44,19 @@ export async function GET() {
     const rows = await db.select().from(siteConfig).where(eq(siteConfig.id, 1)).limit(1);
     const tos = ((rows[0]?.config as Record<string, unknown>)?.tos ?? {}) as Record<string, TosEntry>;
 
-    const rendered: Record<TosCategory, { html: string; updatedAt: string | null; authorName: string | null }> = {
-      general: { html: "", updatedAt: null, authorName: null },
-      owner1: { html: "", updatedAt: null, authorName: null },
-      owner2: { html: "", updatedAt: null, authorName: null },
+    const rendered: Record<
+      TosCategory,
+      {
+        html: string;
+        updatedAt: string | null;
+        authorName: string | null;
+        avatarUrl: string | null;
+        bannerUrl: string | null;
+      }
+    > = {
+      general: { html: "", updatedAt: null, authorName: null, avatarUrl: null, bannerUrl: null },
+      owner1: { html: "", updatedAt: null, authorName: null, avatarUrl: null, bannerUrl: null },
+      owner2: { html: "", updatedAt: null, authorName: null, avatarUrl: null, bannerUrl: null },
     };
     for (const category of CATEGORIES) {
       const entry = tos[category];
@@ -45,6 +65,8 @@ export async function GET() {
           html: renderDiscordMarkdown(entry.content),
           updatedAt: entry.updatedAt ?? null,
           authorName: entry.authorName ?? null,
+          avatarUrl: entry.avatarUrl ?? null,
+          bannerUrl: entry.bannerUrl ?? null,
         };
       }
     }
@@ -60,7 +82,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let body: { category?: string; content?: string; authorId?: string; authorName?: string };
+  let body: {
+    category?: string;
+    content?: string;
+    authorId?: string;
+    authorName?: string;
+    avatarUrl?: string;
+    bannerUrl?: string | null;
+  };
   try {
     body = await req.json();
   } catch {
@@ -87,6 +116,8 @@ export async function POST(req: NextRequest) {
       content: body.content,
       authorId: body.authorId ?? null,
       authorName: body.authorName ?? null,
+      avatarUrl: isHttpsUrl(body.avatarUrl) ? body.avatarUrl : null,
+      bannerUrl: isHttpsUrl(body.bannerUrl) ? body.bannerUrl : null,
       updatedAt: new Date().toISOString(),
     };
     const merged = { ...existing, tos };
