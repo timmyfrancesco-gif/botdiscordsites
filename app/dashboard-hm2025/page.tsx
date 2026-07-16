@@ -92,6 +92,7 @@ const NAV_TITLES: Record<string, string> = {
   wallet: "Wallet",
   "storefront-configure": "Configure Storefront",
   "activity-logs": "Activity Logs",
+  "login-logs": "Login Logs",
   settings: "Settings",
 };
 
@@ -115,6 +116,7 @@ type NavSection =
   | "wallet"
   | "storefront-configure"
   | "activity-logs"
+  | "login-logs"
   | "settings";
 
 type ModalKind =
@@ -1207,6 +1209,13 @@ function AdminPanel() {
               onClick={() => navigateTo("activity-logs")}
               indent
             />
+            <SidebarItem
+              icon={<IconActivity className="h-4 w-4" />}
+              label="Login Logs"
+              active={activeNav === "login-logs"}
+              onClick={() => navigateTo("login-logs")}
+              indent
+            />
           </SidebarGroup>
 
           <div className="mt-4">
@@ -1432,6 +1441,7 @@ function AdminPanel() {
             <StorefrontConfigureView showToast={showToast} />
           )}
           {activeNav === "activity-logs" && <ActivityLogsView feed={feed} />}
+          {activeNav === "login-logs" && <LoginLogsView />}
         </main>
       </div>
 
@@ -3573,6 +3583,105 @@ function ActivityLogsView({ feed }: { feed: FeedItem[] }) {
               </li>
             ))}
           </ol>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ================================================================== */
+/*  Login Logs View                                                    */
+/* ================================================================== */
+
+type LoginLogEntry = {
+  id: string;
+  userId: string | null;
+  email: string | null;
+  username: string | null;
+  method: string | null;
+  url: string | null;
+  referrer: string | null;
+  ip: string | null;
+  userAgent: string | null;
+  createdAt: string;
+};
+
+function LoginLogsView() {
+  const [logs, setLogs] = useState<LoginLogEntry[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/login-logs")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.logs) setLogs(d.logs);
+      })
+      .catch(() => {})
+      .finally(() => setLoaded(true));
+  }, []);
+
+  return (
+    <div className="space-y-5">
+      <ViewHeader
+        title="Login Logs"
+        subtitle={`Who logged into the site, how, and from where (${logs.length} shown)`}
+      />
+
+      {loaded && logs.length === 0 ? (
+        <EmptyState
+          icon={<IconActivity className="h-6 w-6" />}
+          message="No logins recorded yet."
+          hint="Every email/password or Discord login on the main site will appear here."
+        />
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-white/5" style={{ backgroundColor: "#121214" }}>
+          <table className="w-full text-left text-sm">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">User</th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">Method</th>
+                <th className="hidden px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 lg:table-cell">
+                  URL
+                </th>
+                <th className="hidden px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 md:table-cell">
+                  IP
+                </th>
+                <th className="hidden px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500 xl:table-cell">
+                  User agent
+                </th>
+                <th className="px-4 py-3.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">When</th>
+              </tr>
+            </thead>
+            <tbody>
+              {logs.map((log) => (
+                <tr key={log.id} className="border-b border-white/5 transition-colors hover:bg-white/[0.02]">
+                  <td className="px-4 py-3">
+                    <p className="font-medium text-white">{log.username || "—"}</p>
+                    <p className="text-xs text-zinc-500">{log.email || "—"}</p>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span
+                      className={`rounded-md px-2 py-0.5 text-[10px] font-bold uppercase ${
+                        log.method === "discord"
+                          ? "bg-[#5865F2]/15 text-[#8b98ff]"
+                          : "bg-white/5 text-zinc-400"
+                      }`}
+                    >
+                      {log.method || "unknown"}
+                    </span>
+                  </td>
+                  <td className="hidden max-w-[280px] truncate px-4 py-3 text-xs text-zinc-400 lg:table-cell" title={log.url ?? undefined}>
+                    {log.url || "—"}
+                  </td>
+                  <td className="hidden px-4 py-3 font-mono text-xs text-zinc-400 md:table-cell">{log.ip || "—"}</td>
+                  <td className="hidden max-w-[240px] truncate px-4 py-3 text-xs text-zinc-500 xl:table-cell" title={log.userAgent ?? undefined}>
+                    {log.userAgent || "—"}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-zinc-500">{formatRelativeTime(new Date(log.createdAt).getTime())}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
     </div>

@@ -50,7 +50,7 @@ export default function LoginPage() {
     const { data, error: err } = await loginUser({ email: email.trim(), password });
     setLoading(false);
     if (data) {
-      login(data.token, data.user);
+      login(data.token, data.user, "password");
       router.push("/");
     } else {
       setError(err ?? t("auth.loginFailed"));

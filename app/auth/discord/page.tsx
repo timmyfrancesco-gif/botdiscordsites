@@ -33,7 +33,7 @@ function DiscordCallbackContent() {
     window.history.replaceState(null, "", "/auth/discord");
     loginWithDiscord(code).then(({ data, error: err }) => {
       if (data) {
-        login(data.token, data.user);
+        login(data.token, data.user, "discord");
         router.push("/");
       } else {
         setError(err ?? t("auth.discordFailed"));

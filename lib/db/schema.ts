@@ -222,6 +222,20 @@ export const discordVerifications = pgTable("discord_verifications", {
   ip: text("ip"),
 });
 
+// ── Site login/access logs (main site auth, not tenant dashboards) ──
+export const loginLogs = pgTable("login_logs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id"),
+  email: text("email"),
+  username: text("username"),
+  method: text("method"), // "password" | "discord"
+  url: text("url"), // exact page URL where the login completed
+  referrer: text("referrer"),
+  ip: text("ip"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // ── Activity feed per tenant ────────────────────────────────────────
 export const tenantFeed = pgTable("tenant_feed", {
   id: uuid("id").defaultRandom().primaryKey(),

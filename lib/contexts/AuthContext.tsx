@@ -17,8 +17,28 @@ interface AuthContextValue {
   user: AuthUser | null;
   token: string | null;
   loading: boolean;
-  login: (token: string, user: AuthUser) => void;
+  login: (token: string, user: AuthUser, method: "password" | "discord") => void;
   logout: () => void;
+}
+
+function logLogin(user: AuthUser, method: "password" | "discord") {
+  try {
+    fetch("/api/log-login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: user.id,
+        email: user.email,
+        username: user.username,
+        method,
+        url: window.location.href,
+        referrer: document.referrer || null,
+      }),
+      keepalive: true,
+    }).catch(() => {});
+  } catch {
+    // never let logging break the login flow
+  }
 }
 
 export const AuthContext = createContext<AuthContextValue>({
@@ -52,10 +72,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
   }, []);
 
-  const login = useCallback((t: string, u: AuthUser) => {
+  const login = useCallback((t: string, u: AuthUser, method: "password" | "discord") => {
     localStorage.setItem(TOKEN_KEY, t);
     setToken(t);
     setUser(u);
+    logLogin(u, method);
   }, []);
 
   const logout = useCallback(() => {

@@ -64,7 +64,7 @@ export default function RegisterPage() {
     });
     setLoading(false);
     if (data) {
-      login(data.token, data.user);
+      login(data.token, data.user, "password");
       router.push("/");
     } else {
       setError(err ?? t("auth.registerFailed"));
