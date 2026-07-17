@@ -21,11 +21,7 @@ const OWNER_EMAILS = (process.env.NEXT_PUBLIC_OWNER_EMAILS ?? "")
 const NAV_KEYS = [
   { href: "/#top", key: "nav.home", tenantVisible: true },
   { href: "/#shop", key: "nav.products", tenantVisible: true },
-  { href: "/#services", key: "nav.features", tenantVisible: false },
-  { href: "/#faq", key: "nav.faq", tenantVisible: true },
   { href: "/#vouches", key: "nav.reviews", tenantVisible: false },
-  { href: "/dcoin", key: "nav.dcoin", tenantVisible: false },
-  { href: "/track", key: "nav.trackOrder", tenantVisible: false },
   { href: "/terms", key: "nav.terms", tenantVisible: false },
 ];
 

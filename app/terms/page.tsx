@@ -67,14 +67,15 @@ function TosCategoryCard({ categoryKey, entry }: { categoryKey: keyof TosData; e
     <div className="overflow-hidden rounded-2xl border border-border bg-background-elevated/40">
       {hasAuthor && (
         <div className="relative">
-          <div
-            className="h-20 w-full sm:h-24"
-            style={
-              entry?.bannerUrl
-                ? { backgroundImage: `url(${entry.bannerUrl})`, backgroundSize: "cover", backgroundPosition: "center" }
-                : { background: "linear-gradient(135deg, var(--accent), var(--casino-from))" }
-            }
-          />
+          {entry?.bannerUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={entry.bannerUrl} alt="" className="block w-full" />
+          ) : (
+            <div
+              className="h-20 w-full sm:h-24"
+              style={{ background: "linear-gradient(135deg, var(--accent), var(--casino-from))" }}
+            />
+          )}
           {entry?.avatarUrl && (
             /* eslint-disable-next-line @next/next/no-img-element */
             <img
