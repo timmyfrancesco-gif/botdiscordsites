@@ -1,6 +1,16 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    return [
+      {
+        // Temporary alternate dashboard URL — remove once no longer needed.
+        source: "/dash-dshop2026",
+        destination: "/dashboard-hm2025",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
