@@ -14,7 +14,7 @@ const tr: Record<string, string> = {
 
   // Hero
   "hero.badge": "Premium Ticaret Merkezi",
-  "hero.title": "Dshop",
+  "hero.title": "Easy Boost",
   "hero.description": "Güvenle kripto ticareti yapın — Discord için tasarlanmış emanet, aracı ve takas hizmetleri. Emanet, aracı koruması, takas, reklam alanları, dijital mağaza ve kumarhane — hepsi tek bir Discord sunucusunda.",
   "hero.cta1": "Mağazayı Keşfet",
   "hero.cta2": "Mükemmel",

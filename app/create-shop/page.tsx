@@ -110,7 +110,7 @@ export default function CreateShopPage() {
       <header className="border-b border-white/10 px-6 py-5">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link href="/" className="text-xl font-bold">
-            Dshop
+            Easy Boost
           </Link>
         </div>
       </header>

@@ -127,7 +127,7 @@ export default function Footer() {
             </p>
             <p>
               {site.isTenant ? (
-                <>Powered by <span className="font-semibold text-foreground">Dshop</span></>
+                <>Powered by <span className="font-semibold text-foreground">Easy Boost</span></>
               ) : (
                 t("footer.tagline")
               )}

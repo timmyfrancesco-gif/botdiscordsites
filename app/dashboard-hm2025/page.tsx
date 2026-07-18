@@ -1084,7 +1084,7 @@ function AdminPanel() {
             <span className="text-sm font-bold text-[#90C6FF]">HM</span>
           </div>
           <div className="flex flex-col">
-            <span className="text-sm font-bold text-white">Dshop</span>
+            <span className="text-sm font-bold text-white">Easy Boost</span>
             <span className="text-[10px] text-zinc-500">Admin Panel</span>
           </div>
           <button
@@ -3197,7 +3197,7 @@ type StorefrontConfig = {
 };
 
 const DEFAULT_STOREFRONT_CONFIG: StorefrontConfig = {
-  storeName: "Dshop",
+  storeName: "Easy Boost",
   logoUrl: "",
   faviconUrl: "",
   description: "",

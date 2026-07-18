@@ -14,7 +14,7 @@ const en: Record<string, string> = {
 
   // Hero
   "hero.badge": "Premium Trading Hub",
-  "hero.title": "Dshop",
+  "hero.title": "Easy Boost",
   "hero.description": "Trade crypto with confidence — escrow, middleman & exchange services built for Discord. Escrow, middleman protection, exchange, advertising slots, a digital shop and a casino — all in one Discord server.",
   "hero.cta1": "Explore Shop",
   "hero.cta2": "Excellent",
@@ -200,7 +200,7 @@ const en: Record<string, string> = {
   "auth.login": "Login",
   "auth.register": "Register",
   "auth.logout": "Logout",
-  "auth.loginSubtitle": "Welcome back to Dshop",
+  "auth.loginSubtitle": "Welcome back to Easy Boost",
   "auth.registerSubtitle": "Create your account",
   "auth.emailPlaceholder": "Email address",
   "auth.passwordPlaceholder": "Password",

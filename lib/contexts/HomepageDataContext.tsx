@@ -115,7 +115,7 @@ export function HomepageDataProvider({
   initialData?: HomepageInitialData;
   /**
    * When true, the provider never polls /api/cache/homepage (the main
-   * Dshop data source). Used by tenant shops so their products
+   * Easy Boost data source). Used by tenant shops so their products
    * and feed are never overwritten by main-site data.
    */
   staticData?: boolean;

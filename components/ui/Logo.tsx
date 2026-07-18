@@ -39,5 +39,5 @@ export default function Logo({ className }: { className?: string }) {
     return <FallbackLogo className={className} />;
   }
 
-  return <img src={src} alt="Dshop" className={className} onError={() => setErrored(true)} />;
+  return <img src={src} alt="Easy Boost" className={className} onError={() => setErrored(true)} />;
 }

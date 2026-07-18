@@ -217,7 +217,7 @@ function wrapPage(
       </div>
     </div>
   </div>
-  <div class="footer">Dshop &mdash; Transcript Archive</div>
+  <div class="footer">Easy Boost &mdash; Transcript Archive</div>
 </body>
 </html>`;
 }

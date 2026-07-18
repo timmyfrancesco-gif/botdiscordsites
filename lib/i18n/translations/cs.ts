@@ -14,7 +14,7 @@ const cs: Record<string, string> = {
 
   // Hero
   "hero.badge": "Prémiové obchodní centrum",
-  "hero.title": "Dshop",
+  "hero.title": "Easy Boost",
   "hero.description": "Obchodujte s kryptoměnami s jistotou — escrow, prostředník a směnárenské služby vytvořené pro Discord. Escrow, ochrana prostředníkem, směna, reklamní sloty, digitální obchod a kasino — vše na jednom Discord serveru.",
   "hero.cta1": "Prozkoumat obchod",
   "hero.cta2": "Vynikající",

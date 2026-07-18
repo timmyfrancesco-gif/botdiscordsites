@@ -11,7 +11,7 @@ const it: Record<string, string> = {
   "nav.discord": "Discord",
   "nav.shopNow": "Acquista Ora",
   "hero.badge": "Hub di Trading Premium",
-  "hero.title": "Dshop",
+  "hero.title": "Easy Boost",
   "hero.description": "Fai trading di criptovalute con sicurezza — servizi di escrow, intermediario e scambio pensati per Discord. Escrow, protezione con intermediario, scambio, spazi pubblicitari, un negozio digitale e un casinò — tutto in un unico server Discord.",
   "hero.cta1": "Esplora il Negozio",
   "hero.cta2": "Eccellente",

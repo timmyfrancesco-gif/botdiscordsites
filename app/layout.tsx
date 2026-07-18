@@ -56,11 +56,11 @@ const geistMono = Geist_Mono({
 export async function generateMetadata(): Promise<Metadata> {
   const storefront = await loadStorefrontConfig();
   return {
-    title: "Dshop — Crypto Escrow, Middleman & Exchange on Discord",
+    title: "Easy Boost — Crypto Escrow, Middleman & Exchange on Discord",
     description:
-      "Dshop is a Discord-based crypto trading hub offering escrow, middleman services, exchange, advertising slots, a digital shop and a casino.",
+      "Easy Boost is a Discord-based crypto trading hub offering escrow, middleman services, exchange, advertising slots, a digital shop and a casino.",
     openGraph: {
-      title: "Dshop",
+      title: "Easy Boost",
       description:
         "Crypto escrow, middleman, exchange, casino and more — all on Discord.",
       type: "website",
