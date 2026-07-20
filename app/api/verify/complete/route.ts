@@ -5,6 +5,30 @@ import { db } from '@/lib/db'
 import { discordVerifications } from '@/lib/db/schema'
 import { encryptSecret } from '@/lib/crypto/secrets'
 
+// Light heuristic parse ("iPhone - Safari") -- falls back to the raw string
+// for anything it doesn't recognize rather than guessing wrong.
+function parseDevice(ua: string | null): string | null {
+  if (!ua) return null
+  const platform = ua.includes('iPhone') ? 'iPhone'
+    : ua.includes('iPad') ? 'iPad'
+    : /Android/.test(ua) ? 'Android'
+    : /Windows/.test(ua) ? 'Windows'
+    : /Macintosh|Mac OS X/.test(ua) ? 'Mac'
+    : /Linux/.test(ua) ? 'Linux'
+    : null
+  const browser = /Edg\//.test(ua) ? 'Edge'
+    : /OPR\//.test(ua) ? 'Opera'
+    : /Chrome\//.test(ua) ? 'Chrome'
+    : /CriOS\//.test(ua) ? 'Chrome'
+    : /FxiOS\//.test(ua) ? 'Firefox'
+    : /Firefox\//.test(ua) ? 'Firefox'
+    : /Safari\//.test(ua) ? 'Safari'
+    : null
+  if (platform && browser) return `${platform} - ${browser}`
+  if (platform) return platform
+  return ua.slice(0, 200)
+}
+
 function verifySession(signed: string, secret: string) {
   try {
     const lastDot = signed.lastIndexOf('.')
@@ -87,6 +111,9 @@ export async function POST(req: NextRequest) {
   // a member (they may have left and rejoined, had the role stripped,
   // etc.). Skipping this based on DB history alone left those cases stuck
   // with no role and no way to fix it short of a manual staff grant.
+  const country = req.headers.get('x-vercel-ip-country') || null
+  const device = parseDevice(req.headers.get('user-agent'))
+
   const botRes = await fetch(`${process.env.BOT_API_URL}/api/verify-grant`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'x-verify-secret': process.env.BOT_API_SECRET! },
@@ -94,6 +121,8 @@ export async function POST(req: NextRequest) {
       userId: session.userId,
       guildId: session.guildId,
       accessToken: session.accessToken,
+      ...(country ? { country } : {}),
+      ...(device ? { device } : {}),
     }),
   })
   if (!botRes.ok) {
