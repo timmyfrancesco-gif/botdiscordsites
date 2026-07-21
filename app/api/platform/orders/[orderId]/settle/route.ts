@@ -16,9 +16,15 @@ const VALID_PREV: Record<string, string[]> = {
   failed: ["pending", "paid"],
 };
 
-const MIN_CONFIRMATIONS = Number(process.env.LTC_MIN_CONFIRMATIONS ?? "1");
-const ZERO_CONF_THRESHOLD_EUR = Number(process.env.LTC_ZERO_CONF_THRESHOLD_EUR ?? "20");
 const AMOUNT_TOLERANCE = 0.01; // 1% to absorb rounding / network fees
+
+// Required confirmations scale with order value: bigger payments wait for
+// more blocks before being trusted as settled.
+function requiredConfirmationsForAmount(amountEur: number): number {
+  if (amountEur >= 100) return 3;
+  if (amountEur >= 50) return 2;
+  return 1;
+}
 
 /**
  * Bot-facing endpoint. Called once the bot has confirmed payment, swept the
@@ -86,9 +92,8 @@ export async function POST(
     if ((status === "paid" || status === "delivered") && order.method !== "paypal") {
       const received = await getAddressReceived("ltc", order.payAddress);
       if (received) {
-        const requiredConfirmations = order.amountEur < ZERO_CONF_THRESHOLD_EUR ? 0 : MIN_CONFIRMATIONS;
-        const effectiveReceivedLtc =
-          requiredConfirmations === 0 ? received.receivedLtc + received.unconfirmedLtc : received.receivedLtc;
+        const requiredConfirmations = requiredConfirmationsForAmount(order.amountEur);
+        const effectiveReceivedLtc = received.receivedLtc;
         const required = (order.amountLtc ?? 0) * (1 - AMOUNT_TOLERANCE);
         if (
           !order.amountLtc ||

@@ -6,12 +6,14 @@ import { decryptSecret } from "@/lib/crypto/secrets";
 import { getPayerAddress, sendFromTempWallet } from "@/lib/crypto/ltcSend";
 import { consumeOne } from "./inventory";
 
-const MIN_CONFIRMATIONS = Number(process.env.LTC_MIN_CONFIRMATIONS ?? "1");
-// Orders below this EUR amount settle as soon as the payment is SEEN
-// (0 confirmations / mempool), trading a small double-spend risk for much
-// faster checkout and fewer BlockCypher polls. Higher-value orders still
-// wait for MIN_CONFIRMATIONS.
-const ZERO_CONF_THRESHOLD_EUR = Number(process.env.LTC_ZERO_CONF_THRESHOLD_EUR ?? "20");
+// Required confirmations scale with order value: bigger payments wait for
+// more blocks before the item is released, trading a bit of speed on small
+// orders for safety against a double-spend on larger ones.
+function requiredConfirmationsForAmount(amountEur: number): number {
+  if (amountEur >= 100) return 3;
+  if (amountEur >= 50) return 2;
+  return 1;
+}
 const AMOUNT_TOLERANCE = 0.01; // 1%, absorbs rounding/network fee dust
 const ORDER_TTL_MS = 1000 * 60 * 15; // unpaid orders expire after 15 min
 // Flat, conservative miner fee reserved out of every refund. LTC network fees
@@ -115,11 +117,8 @@ export async function settleStoreOrder(orderId: string): Promise<SettleResult | 
   const received = await getAddressReceived("ltc", order.ltcAddress);
   if (!received) return { status: "pending" };
 
-  const requiredConfirmations = order.amountEur < ZERO_CONF_THRESHOLD_EUR ? 0 : MIN_CONFIRMATIONS;
-  // 0-conf orders count the payment the instant it's seen in the mempool, so
-  // unconfirmed balance counts toward the required amount too.
-  const effectiveReceivedLtc =
-    requiredConfirmations === 0 ? received.receivedLtc + received.unconfirmedLtc : received.receivedLtc;
+  const requiredConfirmations = requiredConfirmationsForAmount(order.amountEur);
+  const effectiveReceivedLtc = received.receivedLtc;
   const required = order.amountLtc * (1 - AMOUNT_TOLERANCE);
   if (effectiveReceivedLtc < required || received.confirmations < requiredConfirmations) {
     return { status: "pending", confirmations: received.confirmations, requiredConfirmations };
@@ -226,7 +225,7 @@ export async function confirmFallbackPayment(orderId: string, txHash: string): P
     .reduce((sum, o) => sum + o.value, 0);
   const paidLtc = paidSatoshi / 1e8;
 
-  const requiredConfirmations = order.amountEur < ZERO_CONF_THRESHOLD_EUR ? 0 : MIN_CONFIRMATIONS;
+  const requiredConfirmations = requiredConfirmationsForAmount(order.amountEur);
   const requiredLtc = (order.amountLtc ?? 0) * (1 - AMOUNT_TOLERANCE);
 
   if (paidLtc < requiredLtc) {
