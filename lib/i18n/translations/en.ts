@@ -111,20 +111,11 @@ const en: Record<string, string> = {
   "reviews.leftRating": "Left a rating.",
 
   // Footer
-  "footer.quickLinks": "Quick Links",
-  "footer.support": "Support",
-  "footer.products": "Products",
-  "footer.description": "Premium Discord trading marketplace — escrow, middleman, exchange and an automated digital shop with instant LTC checkout.",
-  "footer.discordServer": "Discord Server",
-  "footer.liveDashboard": "Live Dashboard",
-  "footer.fees": "Fees",
-  "footer.escrowServices": "Escrow Services",
-  "footer.middlemanPasses": "Middleman Passes",
-  "footer.advertisingSlots": "Advertising Slots",
-  "footer.digitalGoods": "Digital Goods",
-  "footer.disclaimer": "Cryptocurrency transactions are irreversible. Always double-check addresses and amounts before sending funds, and only deal through verified staff and official channels.",
-  "footer.rights": "All rights reserved.",
-  "footer.tagline": "Instant delivery · Secure payments · 24/7 support",
+  "footer.navigation": "Navigation",
+  "footer.legal": "Legal",
+  "footer.socials": "Socials",
+  "footer.feedback": "Feedback",
+  "footer.description": "Premium products for a fraction of the cost.",
 
   // Checkout
   "checkout.title": "Checkout",

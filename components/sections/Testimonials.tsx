@@ -2,7 +2,6 @@
 
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import SectionHeading from "@/components/ui/SectionHeading";
 import { formatRelativeTime } from "@/lib/format";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useHomepageData } from "@/lib/contexts/HomepageDataContext";
@@ -22,18 +21,7 @@ export default function Testimonials() {
   return (
     <section id="vouches" className="section-glow relative px-4 py-28 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <SectionHeading
-          eyebrow={t("reviews.eyebrow")}
-          icon={
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm4.3 7.61l-4.57 6a1 1 0 0 1-.79.39a1 1 0 0 1-.79-.38l-2.44-3.11a1 1 0 0 1 1.58-1.23l1.63 2.08l3.78-5a1 1 0 1 1 1.6 1.22Z" />
-            </svg>
-          }
-          title={t("reviews.title")}
-          description={t("reviews.description")}
-        />
-
-        <div className="mt-16 columns-1 gap-4 sm:columns-2 lg:columns-4">
+        <div className="columns-1 gap-4 sm:columns-2 lg:columns-4">
           {liveReviews.map((review, i) => (
             <motion.figure
               key={review.orderId}
