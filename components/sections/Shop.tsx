@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import SectionHeading from "@/components/ui/SectionHeading";
 import ServiceIcon from "@/components/ui/ServiceIcon";
-import CartDrawer from "@/components/shop/CartDrawer";
 import { useCart } from "@/lib/hooks/useCart";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useHomepageData } from "@/lib/contexts/HomepageDataContext";
@@ -156,7 +155,6 @@ export default function Shop() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [sort, setSort] = useState<SortOption>("default");
-  const [cartOpen, setCartOpen] = useState(false);
   const { t, formatPrice } = useLocale();
 
   const cart = useCart();
@@ -255,7 +253,7 @@ export default function Shop() {
 
           <motion.button
             type="button"
-            onClick={() => setCartOpen(true)}
+            onClick={cart.openCart}
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
             className="relative flex shrink-0 items-center gap-2 self-start rounded-full border border-border bg-background/60 px-4 py-2.5 text-sm font-semibold text-foreground transition-all duration-300 hover:border-accent hover:text-accent hover:shadow-[0_0_24px_-8px_var(--accent)] sm:self-auto"
@@ -362,16 +360,6 @@ export default function Shop() {
           </div>
         )}
       </div>
-
-      <CartDrawer
-        open={cartOpen}
-        lines={cart.lines}
-        total={cart.total}
-        onClose={() => setCartOpen(false)}
-        onUpdateQuantity={cart.updateQuantity}
-        onRemove={cart.removeItem}
-        onClear={cart.clear}
-      />
     </section>
   );
 }

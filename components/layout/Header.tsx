@@ -4,9 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import Logo from "@/components/ui/Logo";
 import LocaleSelector from "@/components/ui/LocaleSelector";
+import CartDrawer from "@/components/shop/CartDrawer";
 import { useAuth } from "@/lib/hooks/useAuth";
 import { useLocale } from "@/lib/hooks/useLocale";
 import { useSiteConfig } from "@/lib/contexts/SiteConfigContext";
+import { useCart } from "@/lib/hooks/useCart";
 import { safeExternalUrl } from "@/lib/safeUrl";
 
 // UI-only: which accounts see the Dashboard link in their profile menu.
@@ -32,6 +34,33 @@ function DiscordIcon({ className = "h-4 w-4" }: { className?: string }) {
     <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
       <path d="M20.3 4.5A18.5 18.5 0 0015.7 3l-.3.6a14 14 0 014.2 1.6 13.6 13.6 0 00-12.2 0A14 14 0 017.6 3.6L7.3 3a18.5 18.5 0 00-4.6 1.5C1 8 .5 11.4.7 14.8a13.8 13.8 0 004.1 2.1l.8-1.3a8.7 8.7 0 01-1.5-.7l.4-.3a11.7 11.7 0 009 0l.4.3a8.7 8.7 0 01-1.5.7l.8 1.3a13.8 13.8 0 004.1-2.1c.3-3.9-.6-7.3-1.9-10.3zM8.7 12.7c-.8 0-1.4-.7-1.4-1.6 0-.9.6-1.6 1.4-1.6.8 0 1.5.7 1.5 1.6 0 .9-.7 1.6-1.5 1.6zm6.6 0c-.8 0-1.4-.7-1.4-1.6 0-.9.6-1.6 1.4-1.6.9 0 1.5.7 1.5 1.6 0 .9-.6 1.6-1.5 1.6z" />
     </svg>
+  );
+}
+
+function CartButton() {
+  const cart = useCart();
+  const { t } = useLocale();
+
+  return (
+    <button
+      type="button"
+      onClick={cart.openCart}
+      aria-label={t("shop.cart")}
+      className="island-nav-icon-btn relative"
+    >
+      <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} aria-hidden>
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          d="M3 3h2l.4 2M7 13h10l3-7H6.4M7 13L5.4 5M7 13l-1.5 3h11M9 21a1 1 0 100-2 1 1 0 000 2zm8 0a1 1 0 100-2 1 1 0 000 2z"
+        />
+      </svg>
+      {cart.count > 0 ? (
+        <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-bold text-white">
+          {cart.count > 9 ? "9+" : cart.count}
+        </span>
+      ) : null}
+    </button>
   );
 }
 
@@ -147,6 +176,7 @@ export default function Header() {
   const { t } = useLocale();
   const { user, logout } = useAuth();
   const site = useSiteConfig();
+  const cart = useCart();
   const isOwner = Boolean(
     user && (user.role === "admin" || (user.email && OWNER_EMAILS.includes(user.email.toLowerCase())))
   );
@@ -224,6 +254,7 @@ export default function Header() {
                 >
                   <DiscordIcon />
                 </a>
+                <CartButton />
                 {!site.isTenant && isOwner && (
                   <Link
                     href="/dashboard-hm2025"
@@ -278,8 +309,9 @@ export default function Header() {
           <div className="island-sheet-divider" />
 
           <div className="flex flex-col gap-2 px-4 pt-2">
-            <div className="flex justify-center py-1">
+            <div className="flex items-center justify-center gap-3 py-1">
               <LocaleSelector />
+              <CartButton />
             </div>
 
             {user ? (
@@ -342,6 +374,16 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      <CartDrawer
+        open={cart.isOpen}
+        lines={cart.lines}
+        total={cart.total}
+        onClose={cart.closeCart}
+        onUpdateQuantity={cart.updateQuantity}
+        onRemove={cart.removeItem}
+        onClear={cart.clear}
+      />
     </>
   );
 }

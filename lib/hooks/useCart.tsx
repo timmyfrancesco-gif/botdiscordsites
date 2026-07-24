@@ -26,6 +26,9 @@ interface CartContextValue {
   count: number;
   total: number;
   currency: string;
+  isOpen: boolean;
+  openCart: () => void;
+  closeCart: () => void;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -33,6 +36,7 @@ const CartContext = createContext<CartContextValue | null>(null);
 export function CartProvider({ children }: { children: ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([]);
   const [hydrated, setHydrated] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   useEffect(() => {
     try {
@@ -91,8 +95,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
   );
   const currency = lines[0]?.item.currency ?? "EUR";
 
+  const openCart = useCallback(() => setIsOpen(true), []);
+  const closeCart = useCallback(() => setIsOpen(false), []);
+
   return (
-    <CartContext value={{ lines, addItem, removeItem, updateQuantity, clear, count, total, currency }}>
+    <CartContext
+      value={{ lines, addItem, removeItem, updateQuantity, clear, count, total, currency, isOpen, openCart, closeCart }}
+    >
       {children}
     </CartContext>
   );
