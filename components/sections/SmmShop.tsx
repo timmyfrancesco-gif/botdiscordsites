@@ -101,12 +101,12 @@ function SmmProductCard({ product, index }: { product: SmmProduct; index: number
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, delay: (index % 3) * 0.1, ease: [0.22, 1, 0.36, 1] }}
-        whileHover={{ y: -8, transition: { duration: 0.25 } }}
-        className="group gradient-border relative flex flex-col overflow-hidden rounded-2xl bg-[color-mix(in_srgb,var(--background-elevated)_80%,transparent)] transition-all duration-300 hover:shadow-[0_8px_40px_-12px_var(--accent)]"
+        whileHover={{ y: -6, transition: { duration: 0.25 } }}
+        className="group shine-card relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d] transition-colors duration-300 hover:bg-[#111111]"
       >
-        <div className="pointer-events-none absolute -right-12 -top-12 z-10 h-32 w-32 rounded-full bg-accent/15 blur-3xl opacity-0 transition-all duration-500 group-hover:opacity-100 group-hover:scale-150" />
+        <span className="shine-sweep" aria-hidden />
 
-        <div className="relative h-40 w-full overflow-hidden border-b border-border bg-background-elevated">
+        <div className="relative h-40 w-full overflow-hidden border-b border-white/[0.07] bg-black/40">
           {product.image ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -115,18 +115,18 @@ function SmmProductCard({ product, index }: { product: SmmProduct; index: number
               className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-accent/10 to-background-elevated">
+            <div className="flex h-full w-full items-center justify-center bg-black/40">
               <svg viewBox="0 0 24 24" className="h-12 w-12 text-accent/60" fill="none" stroke="currentColor" strokeWidth={1.5}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
               </svg>
             </div>
           )}
 
-          <span className="absolute left-3 top-3 rounded-full bg-indigo-500/90 px-3 py-1 text-xs font-bold text-white shadow-lg">
+          <span className="absolute left-3 top-3 rounded-full bg-black/70 px-3 py-1 text-xs font-bold text-white">
             SMM
           </span>
 
-          <span className="absolute right-3 top-3 rounded-full bg-gradient-to-r from-casino-from to-casino-to px-3 py-1 text-xs font-bold text-white shadow-lg">
+          <span className="absolute right-3 top-3 rounded-full bg-accent px-3 py-1 text-xs font-bold text-white">
             {formatPrice(product.pricePerThousand)} / 1K
           </span>
         </div>
@@ -147,7 +147,7 @@ function SmmProductCard({ product, index }: { product: SmmProduct; index: number
           <button
             type="button"
             onClick={() => setOpen(true)}
-            className="mt-4 w-full rounded-full border border-accent/30 bg-accent-soft px-4 py-2 text-center text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-background"
+            className="hero-cta-primary mt-4 w-full rounded-full px-4 py-2 text-center text-sm font-semibold"
           >
             Order Now
           </button>
@@ -161,7 +161,7 @@ function SmmProductCard({ product, index }: { product: SmmProduct; index: number
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-border bg-background p-6 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
@@ -240,7 +240,7 @@ function SmmProductCard({ product, index }: { product: SmmProduct; index: number
                     return;
                   }
                 }}
-                className={`w-full rounded-full bg-accent px-4 py-3 text-center text-sm font-bold text-background transition-all hover:shadow-[0_0_24px_-6px_var(--accent)] hover:brightness-110 ${
+                className={`hero-cta-primary w-full rounded-full px-4 py-3 text-center text-sm font-bold ${
                   !link.trim() || !discord.trim() ? "pointer-events-none opacity-50" : ""
                 }`}
               >

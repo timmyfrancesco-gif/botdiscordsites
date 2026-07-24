@@ -44,66 +44,62 @@ export default function Pricing() {
             return (
               <motion.div
                 key={tier.id}
-                initial={{ opacity: 0, y: 40, scale: 0.95 }}
-                whileInView={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-80px" }}
-                transition={{ duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] }}
-                className={`group shine-card relative flex flex-col overflow-hidden rounded-2xl p-[1px] transition-all duration-300 hover:-translate-y-1 ${
+                transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
+                className={`group shine-card relative flex flex-col overflow-hidden rounded-2xl border p-7 transition-colors duration-300 ${
                   isFeatured
-                    ? "bg-gradient-to-br from-accent via-casino-from to-casino-to shadow-[0_0_40px_-10px_var(--accent)] hover:shadow-[0_0_56px_-10px_var(--accent)]"
-                    : "bg-border hover:bg-gradient-to-br hover:from-accent/50 hover:via-casino-from/50 hover:to-accent/50"
+                    ? "border-accent/30 bg-[#0d0d0d] hover:bg-[#111111]"
+                    : "border-white/[0.07] bg-[#0d0d0d] hover:bg-[#111111]"
                 }`}
               >
                 <span className="shine-sweep" aria-hidden />
-                <div className="flex flex-1 flex-col rounded-[calc(1rem-1px)] bg-background p-7">
-                  {isFeatured ? (
-                    <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-gradient-to-r from-accent to-casino-from px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
-                      <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3 animate-glow-pulse">
-                        <path d="M10 1.5l3 5.5h6l-4.5 4 1.5 6-5-3.5-5 3.5 1.5-6L3 7h6l1-5.5z" />
-                      </svg>
-                      {t("pricing.mostVisibility")}
-                    </span>
-                  ) : null}
+                {isFeatured ? (
+                  <span className="mb-4 inline-flex w-fit items-center gap-1.5 rounded-full bg-accent px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest text-white">
+                    <svg viewBox="0 0 20 20" fill="currentColor" className="h-3 w-3">
+                      <path d="M10 1.5l3 5.5h6l-4.5 4 1.5 6-5-3.5-5 3.5 1.5-6L3 7h6l1-5.5z" />
+                    </svg>
+                    {t("pricing.mostVisibility")}
+                  </span>
+                ) : null}
 
-                  <h3 className="text-xl font-bold text-foreground">{t(tier.nameKey)}</h3>
-                  <p className="mt-1.5 text-sm text-muted">{t(tier.descKey)}</p>
+                <h3 className="text-xl font-bold text-foreground">{t(tier.nameKey)}</h3>
+                <p className="mt-1.5 text-sm text-muted">{t(tier.descKey)}</p>
 
-                  <div className="mt-7 flex flex-col gap-3">
-                    {SLOT_DURATIONS_T.map((duration) => {
-                      const price = SLOT_PRICES[tier.id][duration.id];
-                      return (
-                        <motion.div
-                          key={duration.id}
-                          whileHover={{ scale: 1.02 }}
-                          transition={{ type: "spring", stiffness: 400, damping: 25 }}
-                          className="flex items-center justify-between rounded-xl border border-border/60 bg-background-elevated/60 px-4 py-3.5 transition-colors hover:border-accent/30"
-                        >
-                          <div>
-                            <div className="text-sm font-medium text-foreground">
-                              {t(duration.nameKey)}
-                            </div>
-                            <div className={`text-xl font-extrabold ${isFeatured ? "text-gradient-accent" : "text-accent"}`}>
-                              {formatPrice(price)}
-                            </div>
+                <div className="mt-7 flex flex-col gap-3">
+                  {SLOT_DURATIONS_T.map((duration) => {
+                    const price = SLOT_PRICES[tier.id][duration.id];
+                    return (
+                      <div
+                        key={duration.id}
+                        className="flex items-center justify-between rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3.5 transition-colors hover:border-accent/30"
+                      >
+                        <div>
+                          <div className="text-sm font-medium text-foreground">
+                            {t(duration.nameKey)}
                           </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setSelection({ tierId: tier.id, durationId: duration.id, priceEur: price });
-                              setModalKey((k) => k + 1);
-                            }}
-                            className={`rounded-full px-5 py-2 text-sm font-semibold transition-all duration-300 ${
-                              isFeatured
-                                ? "bg-accent text-background shadow-[0_0_20px_-5px_var(--accent)] hover:shadow-[0_0_30px_-5px_var(--accent)] hover:scale-105"
-                                : "border border-border text-foreground hover:border-accent hover:text-accent hover:shadow-[0_0_20px_-8px_var(--accent)]"
-                            }`}
-                          >
-                            {t("pricing.buy")}
-                          </button>
-                        </motion.div>
-                      );
-                    })}
-                  </div>
+                          <div className="text-xl font-extrabold text-accent">
+                            {formatPrice(price)}
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelection({ tierId: tier.id, durationId: duration.id, priceEur: price });
+                            setModalKey((k) => k + 1);
+                          }}
+                          className={
+                            isFeatured
+                              ? "hero-cta-primary rounded-full px-5 py-2 text-sm font-semibold"
+                              : "hero-cta-secondary rounded-full px-5 py-2 text-sm font-semibold"
+                          }
+                        >
+                          {t("pricing.buy")}
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </motion.div>
             );

@@ -179,54 +179,10 @@ body {
   color: #05070d;
 }
 
-.text-gradient-casino {
-  background: linear-gradient(135deg, var(--casino-from), var(--casino-to));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
 .glass-panel {
   background: color-mix(in srgb, var(--background-elevated) 80%, transparent);
   border: 1px solid var(--border);
   backdrop-filter: blur(12px);
-}
-
-.text-gradient-accent {
-  background: linear-gradient(135deg, var(--accent), var(--casino-from));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-}
-
-.gradient-border {
-  position: relative;
-}
-.gradient-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, var(--accent), var(--casino-from), var(--accent));
-  background-size: 300% 300%;
-  animation: gradient-x 6s ease infinite;
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  mask-composite: exclude;
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
-.gradient-border:hover::before {
-  opacity: 0.5;
-}
-
-.shimmer-bg {
-  background: linear-gradient(90deg, transparent 0%, rgba(237,58,65,0.06) 50%, transparent 100%);
-  background-size: 200% 100%;
-  animation: shimmer 2.5s linear infinite;
 }
 
 .section-glow {
