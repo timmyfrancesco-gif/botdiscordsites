@@ -3,6 +3,7 @@ export const SITE = {
   tagline: "Trade crypto with confidence — escrow, middleman & exchange services built for Discord.",
   discordInvite: process.env.NEXT_PUBLIC_DISCORD_INVITE ?? "https://discord.gg/your-invite",
   shopUrl: process.env.NEXT_PUBLIC_SHOP_URL ?? "https://discord.gg/your-invite",
+  telegramInvite: process.env.NEXT_PUBLIC_TELEGRAM_INVITE ?? "",
 };
 
 export const NAV_LINKS = [

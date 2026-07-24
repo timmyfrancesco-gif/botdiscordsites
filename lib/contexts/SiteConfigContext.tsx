@@ -8,6 +8,7 @@ export interface SiteConfig {
   tagline: string;
   discordInvite: string;
   shopUrl: string;
+  telegramInvite?: string;
   isTenant: boolean;
   tenantSlug?: string;
   tenantLogo?: string | null;

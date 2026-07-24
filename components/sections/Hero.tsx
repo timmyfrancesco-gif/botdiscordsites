@@ -98,7 +98,14 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-balance text-5xl font-extralight uppercase tracking-tight sm:text-7xl lg:text-8xl"
         >
-          <span className="hero-title-gradient">{title}</span>
+          <span className="hero-title-gradient">
+            {title.split("\n").map((line, i, arr) => (
+              <span key={i}>
+                {line}
+                {i < arr.length - 1 && <br />}
+              </span>
+            ))}
+          </span>
         </motion.h1>
 
         <p className="mt-6 max-w-2xl text-balance text-lg text-muted sm:text-xl">

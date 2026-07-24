@@ -14,7 +14,7 @@ const en: Record<string, string> = {
 
   // Hero
   "hero.badge": "Discover New Releases",
-  "hero.title": "Easy Boost",
+  "hero.title": "Nitro Supplier\nFast & Trusted",
   "hero.description": "The exact same Discord Nitro, just way cheaper.",
   "hero.cta1": "Browse Products",
   "hero.cta2": "Excellent",
@@ -26,9 +26,9 @@ const en: Record<string, string> = {
   "hero.statTraders": "Happy Traders",
 
   // Features / Services
-  "features.eyebrow": "What we offer",
-  "features.title": "A full trading suite, built into Discord",
-  "features.description": "From safe peer-to-peer trades to entertainment, Astro Exchange covers everything you need without ever leaving your server.",
+  "features.eyebrow": "Features",
+  "features.title": "We Don't Cut Corners",
+  "features.description": "Secure payments, instant delivery, and support that doesn't leave you on read.",
   "features.escrowTitle": "Escrow",
   "features.escrowDesc": "A neutral third party holds funds until both sides of a deal confirm delivery. Built for buyer/seller trades of any size.",
   "features.escrowFee": "0.25% fee",
@@ -45,9 +45,9 @@ const en: Record<string, string> = {
   "features.shopDesc": "Browse and purchase digital goods directly through the bot, with secure delivery on every order.",
 
   // Products / Shop
-  "shop.eyebrow": "Digital Shop",
-  "shop.title": "Browse what's in stock",
-  "shop.description": "Products are added and restocked live by our Discord bot. Add items to your cart and pay with LTC, all on this site.",
+  "shop.eyebrow": "Our Products",
+  "shop.title": "Shop",
+  "shop.description": "Quality products, zero wait.",
   "shop.inStock": "In Stock",
   "shop.outOfStock": "Out of Stock",
   "shop.lowStockLeft": "Left",
@@ -81,10 +81,17 @@ const en: Record<string, string> = {
   "pricing.buy": "Buy",
   "pricing.mostVisibility": "Most Visibility",
 
+  // Socials
+  "socials.eyebrow": "Community",
+  "socials.title": "Stay connected",
+  "socials.description": "Be the first to know about new drops and announcements.",
+  "socials.discord": "Discord",
+  "socials.telegram": "Telegram",
+
   // FAQ
   "faq.eyebrow": "FAQ",
-  "faq.title": "Frequently asked questions",
-  "faq.description": "Got questions? We've got answers. Here are the most common things people ask before buying.",
+  "faq.title": "Got questions?",
+  "faq.description": "Find answers to the most common questions below.",
   "faq.q1": "How do I buy a product?",
   "faq.a1": "Browse the shop, open a product to choose a quantity, then pay with Litecoin (LTC) directly on the site. Once your payment is confirmed, the item is delivered straight to this site and to your Discord DMs.",
   "faq.q2": "What payment methods are accepted?",

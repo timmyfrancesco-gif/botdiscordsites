@@ -12,6 +12,7 @@ const SmmShop = dynamic(() => import("@/components/sections/SmmShop"));
 const Pricing = dynamic(() => import("@/components/sections/Pricing"));
 const Fees = dynamic(() => import("@/components/sections/Fees"));
 const Testimonials = dynamic(() => import("@/components/sections/Testimonials"));
+const Socials = dynamic(() => import("@/components/sections/Socials"));
 const Faq = dynamic(() => import("@/components/sections/Faq"));
 const CtaSection = dynamic(() => import("@/components/sections/CtaSection"));
 
@@ -41,6 +42,7 @@ export default async function Home() {
         <Pricing />
         <Fees />
         <Testimonials />
+        <Socials />
         <Faq />
         <CtaSection />
       </HomepageDataProvider>
