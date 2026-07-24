@@ -16,7 +16,6 @@ interface TenantConfig {
   name: string;
   description: string;
   logo: string | null;
-  theme: string;
   accentColor: string | null;
   discordInvite: string;
 }
@@ -44,16 +43,12 @@ interface TenantProduct {
   totalSold: number;
 }
 
-function TenantThemeApplier({ theme }: { theme: string }) {
-  const { setTheme, theme: currentTheme } = useTheme();
+function TenantThemeApplier({ accentColor }: { accentColor: string | null }) {
+  const { setAccentOverride } = useTheme();
   useEffect(() => {
-    const originalTheme = currentTheme;
-    setTheme(theme === "heaven" ? "heaven" : "hyper", false);
-    return () => {
-      setTheme(originalTheme, false);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setAccentOverride(accentColor);
+    return () => setAccentOverride(null);
+  }, [accentColor, setAccentOverride]);
   return null;
 }
 
@@ -96,7 +91,7 @@ export default function TenantShell({
 
   return (
     <SiteConfigProvider config={siteConfig}>
-      <TenantThemeApplier theme={tenant.theme} />
+      <TenantThemeApplier accentColor={tenant.accentColor} />
       <HomepageDataProvider
         staticData
         initialData={{

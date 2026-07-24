@@ -139,8 +139,8 @@ function wrapPage(
       --text: #fafafa;
       --text-muted: #71717a;
       --text-dim: #52525b;
-      --accent: #6366f1;
-      --accent-light: #818cf8;
+      --accent: #ff2d34;
+      --accent-light: #ff5f66;
       --green: #22c55e;
       --radius: 12px;
     }
@@ -156,7 +156,7 @@ function wrapPage(
     .header-brand { display: flex; align-items: center; gap: 8px; }
     .logo-icon { width: 18px; height: 18px; color: var(--accent-light); }
     .brand-name { font-size: 13px; font-weight: 600; color: var(--text-muted); letter-spacing: .03em; text-transform: uppercase; }
-    .badge { background: rgba(99,102,241,.15); color: var(--accent-light); border: 1px solid rgba(99,102,241,.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
+    .badge { background: rgba(255,45,52,.15); color: var(--accent-light); border: 1px solid rgba(255,45,52,.3); border-radius: 20px; padding: 3px 10px; font-size: 11px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
     .header-actions { display: flex; align-items: center; gap: 10px; }
     .download-btn { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,.06); color: var(--text); border: 1px solid var(--border); border-radius: 8px; padding: 5px 12px; font-size: 12px; font-weight: 600; text-decoration: none; transition: background .15s ease; }
     .download-btn:hover { background: rgba(255,255,255,.12); }

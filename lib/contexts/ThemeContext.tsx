@@ -1,115 +1,69 @@
 "use client";
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
-
-export type ThemeId = "heaven" | "hyper";
-
-interface ThemeColors {
-  background: string;
-  backgroundElevated: string;
-  foreground: string;
-  muted: string;
-  border: string;
-  accent: string;
-  accentSoft: string;
-  casinoFrom: string;
-  casinoTo: string;
-}
-
-const THEMES: Record<ThemeId, { label: string; colors: ThemeColors }> = {
-  heaven: {
-    label: "Heaven",
-    colors: {
-      background: "#050810",
-      backgroundElevated: "#0c121e",
-      foreground: "#f0f5fb",
-      muted: "#93a1b5",
-      border: "#1c2638",
-      accent: "#D88DF8",
-      accentSoft: "#D88DF81a",
-      casinoFrom: "#60aaff",
-      casinoTo: "#38bdf8",
-    },
-  },
-  hyper: {
-    label: "Hyper",
-    colors: {
-      background: "#0a0a0a",
-      backgroundElevated: "#141414",
-      foreground: "#ffffff",
-      muted: "#a3a3a3",
-      border: "#1f1f1f",
-      accent: "#6571FF",
-      accentSoft: "#6571ff1a",
-      casinoFrom: "#818cf8",
-      casinoTo: "#6571FF",
-    },
-  },
-};
+import { createContext, useContext, useEffect, type ReactNode } from "react";
 
 const STORAGE_KEY = "hm_site_theme";
 
+const BASE_ACCENT = "#ff2d34";
+
+function hexToRgbTriplet(hex: string): string | null {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
+  if (!m) return null;
+  const int = parseInt(m[1], 16);
+  return `${(int >> 16) & 255}, ${(int >> 8) & 255}, ${int & 255}`;
+}
+
+/** Overrides just the accent hue on top of the single ENVY_ARES base theme (used for per-tenant branding). */
+function applyAccentOverride(accentColor: string | null | undefined) {
+  const root = document.documentElement;
+  if (!accentColor) {
+    root.style.removeProperty("--accent");
+    root.style.removeProperty("--accent-soft");
+    root.style.removeProperty("--accent-rgb");
+    return;
+  }
+  const rgb = hexToRgbTriplet(accentColor);
+  if (!rgb) return;
+  root.style.setProperty("--accent", accentColor);
+  root.style.setProperty("--accent-soft", `${accentColor}1a`);
+  root.style.setProperty("--accent-rgb", rgb);
+}
+
 interface ThemeContextValue {
-  theme: ThemeId;
-  setTheme: (id: ThemeId, persist?: boolean) => void;
-  themes: typeof THEMES;
+  setAccentOverride: (accentColor: string | null | undefined) => void;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
-  theme: "heaven",
-  setTheme: () => {},
-  themes: THEMES,
+  setAccentOverride: () => {},
 });
 
-function applyTheme(id: ThemeId) {
-  const colors = THEMES[id].colors;
-  const root = document.documentElement;
-  root.style.setProperty("--background", colors.background);
-  root.style.setProperty("--background-elevated", colors.backgroundElevated);
-  root.style.setProperty("--foreground", colors.foreground);
-  root.style.setProperty("--muted", colors.muted);
-  root.style.setProperty("--border", colors.border);
-  root.style.setProperty("--accent", colors.accent);
-  root.style.setProperty("--accent-soft", colors.accentSoft);
-  root.style.setProperty("--casino-from", colors.casinoFrom);
-  root.style.setProperty("--casino-to", colors.casinoTo);
-}
-
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setThemeState] = useState<ThemeId>("heaven");
-
   useEffect(() => {
+    // Wipe out any old per-browser theme override (from the retired
+    // Heaven/Hyper theme switcher) that would otherwise keep clobbering
+    // the site's CSS variables with the wrong palette on every load.
     try {
-      const saved = localStorage.getItem(STORAGE_KEY) as ThemeId | null;
-      if (saved && saved in THEMES) {
-        setThemeState(saved);
-        applyTheme(saved);
-      }
+      localStorage.removeItem(STORAGE_KEY);
     } catch {
-      // localStorage unavailable (private mode) — keep default theme
+      // localStorage unavailable (private mode) — nothing to clean up
     }
+    const root = document.documentElement;
+    root.style.removeProperty("--background");
+    root.style.removeProperty("--background-elevated");
+    root.style.removeProperty("--foreground");
+    root.style.removeProperty("--muted");
+    root.style.removeProperty("--border");
+    root.style.removeProperty("--accent");
+    root.style.removeProperty("--accent-soft");
+    root.style.removeProperty("--casino-from");
+    root.style.removeProperty("--casino-to");
   }, []);
 
-  const setTheme = useCallback((id: ThemeId, persist = true) => {
-    setThemeState(id);
-    applyTheme(id);
-    if (persist) {
-      try {
-        localStorage.setItem(STORAGE_KEY, id);
-      } catch {
-        // ignore persistence failures
-      }
-    }
-  }, []);
-
-  const value = useMemo(
-    () => ({ theme, setTheme, themes: THEMES }),
-    [theme, setTheme],
-  );
-
-  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
+  return <ThemeContext value={{ setAccentOverride: applyAccentOverride }}>{children}</ThemeContext>;
 }
 
 export function useTheme() {
   return useContext(ThemeContext);
 }
+
+export { BASE_ACCENT };

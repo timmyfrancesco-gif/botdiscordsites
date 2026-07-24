@@ -68,7 +68,6 @@ export default async function TenantPage({
     name: tenant.name,
     description: tenant.description ?? "",
     logo: tenant.logo,
-    theme: tenant.theme,
     accentColor: tenant.accentColor,
     discordInvite: tenant.discordInvite ?? "",
   };

@@ -87,7 +87,7 @@ function CaptchaInner() {
                 <button
                   type="button"
                   onClick={run}
-                  style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#D88DF8', color: '#0f0f0f', fontWeight: 700, cursor: 'pointer' }}
+                  style={{ padding: '10px 20px', borderRadius: 8, border: 'none', background: '#ff2d34', color: '#ffffff', fontWeight: 700, cursor: 'pointer' }}
                 >
                   Try again
                 </button>
@@ -100,7 +100,7 @@ function CaptchaInner() {
                     width: 32,
                     height: 32,
                     border: '3px solid #2a2a2a',
-                    borderTopColor: '#D88DF8',
+                    borderTopColor: '#ff2d34',
                     borderRadius: '50%',
                     animation: 'spin 0.8s linear infinite',
                   }}

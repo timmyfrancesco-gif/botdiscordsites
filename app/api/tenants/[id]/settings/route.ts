@@ -7,7 +7,6 @@ import { serverError } from "@/lib/http";
 
 const LTC_ADDRESS_RE = /^([LM3][a-km-zA-HJ-NP-Z1-9]{25,39}|ltc1[a-z0-9]{20,90})$/;
 const PAYPAL_EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const THEMES = new Set(["heaven", "hyper"]);
 const HEX_COLOR_RE = /^#[0-9a-fA-F]{6}$/;
 
 /**
@@ -57,15 +56,10 @@ function validateSettings(
     }
     updates.discordInvite = v || null;
   }
-  if ("theme" in body) {
-    const v = asString(body.theme);
-    if (!v || !THEMES.has(v)) return { error: "invalid theme" };
-    updates.theme = v;
-  }
   if ("accentColor" in body) {
     const v = asString(body.accentColor);
-    if (!v || !HEX_COLOR_RE.test(v)) return { error: "invalid accent color" };
-    updates.accentColor = v;
+    if (v !== null && v !== "" && !HEX_COLOR_RE.test(v)) return { error: "invalid accent color" };
+    updates.accentColor = v || null;
   }
   if ("ltcAddress" in body) {
     const v = asString(body.ltcAddress)?.trim();
@@ -109,7 +103,6 @@ export async function GET(
       name: tenant.name,
       description: tenant.description,
       logo: tenant.logo,
-      theme: tenant.theme,
       accentColor: tenant.accentColor,
       discordInvite: tenant.discordInvite,
       ltcAddress: tenant.ltcAddress,

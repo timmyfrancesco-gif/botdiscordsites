@@ -1,17 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050810;
-  --background-elevated: #0c121e;
-  --foreground: #f0f5fb;
-  --muted: #93a1b5;
-  --border: #1c2638;
+  --background: #0a0a0a;
+  --background-elevated: #141414;
+  --foreground: #ffffff;
+  --muted: #ffffff99;
+  --border: #ffffff0d;
 
-  --accent: #ED3A41;
-  --accent-soft: #ED3A411a;
-  --accent-rgb: 237, 58, 65;
+  --accent: #ff2d34;
+  --accent-soft: #ff2d341a;
+  --accent-rgb: 255, 45, 52;
 
-  --casino-from: #ff6a6f;
+  --casino-from: #ff2d34;
   --casino-to: #ff2d34;
 }
 
@@ -210,7 +210,7 @@ body {
   padding: 28px;
   border-radius: 16px;
   background:
-    radial-gradient(240px 160px at var(--mx) var(--my), rgba(237,58,65,0.08), transparent 60%),
+    radial-gradient(240px 160px at var(--mx) var(--my), rgba(var(--accent-rgb),0.08), transparent 60%),
     #0d0d0d;
   border: 1px solid rgba(255,255,255,0.07);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
@@ -226,7 +226,7 @@ body {
 .feature-card:hover {
   transform: translateY(-6px) scale(1.01);
   background-color: #161616;
-  border-color: rgba(237,58,65,0.35);
+  border-color: rgba(var(--accent-rgb),0.35);
   box-shadow: 0 24px 80px rgba(0,0,0,0.45);
 }
 .feature-card::after {
@@ -235,7 +235,7 @@ body {
   inset: -1px;
   border-radius: 16px;
   background: conic-gradient(from 180deg at 50% 50%,
-    rgba(237,58,65,0.45), transparent 16%, transparent 50%,
+    rgba(var(--accent-rgb),0.45), transparent 16%, transparent 50%,
     rgba(96,170,255,0.5) 66%, transparent 82%, transparent 100%);
   mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
   mask-composite: exclude;
@@ -261,7 +261,7 @@ body {
   transition: border-color 0.25s ease, background-color 0.25s ease, transform 0.25s ease;
 }
 .ticker-pill:hover {
-  border-color: rgba(237,58,65, 0.28);
+  border-color: rgba(var(--accent-rgb), 0.28);
   background: rgba(255, 255, 255, 0.05);
   transform: translateY(-1px);
 }
@@ -304,7 +304,7 @@ body {
   inset: 0;
   z-index: 1;
   opacity: 0;
-  background: radial-gradient(280px 220px at var(--mx) var(--my), rgba(237,58,65, 0.14), transparent 62%);
+  background: radial-gradient(280px 220px at var(--mx) var(--my), rgba(var(--accent-rgb), 0.14), transparent 62%);
   transition: opacity 0.3s ease;
 }
 .spotlight:hover .spotlight-glow {
@@ -586,7 +586,7 @@ body {
 }
 .island-nav-link:hover {
   color: #ffffff;
-  background: rgba(237, 58, 65, 0.12);
+  background: rgba(var(--accent-rgb), 0.12);
 }
 
 .island-nav-icon-btn {
@@ -602,7 +602,7 @@ body {
 }
 .island-nav-icon-btn:hover {
   color: #ffffff;
-  background: rgba(237, 58, 65, 0.12);
+  background: rgba(var(--accent-rgb), 0.12);
 }
 
 .island-nav-cta {
@@ -637,7 +637,7 @@ body {
   flex-shrink: 0;
 }
 .island-nav-hamburger:hover {
-  background: rgba(237, 58, 65, 0.12);
+  background: rgba(var(--accent-rgb), 0.12);
   color: #ffffff;
 }
 .island-nav-hamburger svg {
@@ -695,7 +695,7 @@ body {
   background: rgba(10, 10, 10, 0.97);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-top: 1px solid rgba(237, 58, 65, 0.2);
+  border-top: 1px solid rgba(var(--accent-rgb), 0.2);
   border-radius: 20px 20px 0 0;
   padding: 12px 0 max(28px, env(safe-area-inset-bottom)) 0;
 }
@@ -703,7 +703,7 @@ body {
 .island-sheet-handle {
   width: 36px;
   height: 4px;
-  background: rgba(237, 58, 65, 0.3);
+  background: rgba(var(--accent-rgb), 0.3);
   border-radius: 9999px;
   margin: 0 auto 20px;
 }
@@ -721,13 +721,13 @@ body {
   transition: background 0.2s ease, color 0.2s ease;
 }
 .island-sheet-link:hover {
-  background: rgba(237, 58, 65, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   color: #ffffff;
 }
 
 .island-sheet-divider {
   height: 1px;
-  background: rgba(237, 58, 65, 0.15);
+  background: rgba(var(--accent-rgb), 0.15);
   margin: 8px 16px;
 }
 
@@ -759,15 +759,15 @@ body {
   font-size: 14px;
   font-weight: 500;
   color: rgba(250, 139, 144, 0.7);
-  border: 1px solid rgba(237, 58, 65, 0.2);
+  border: 1px solid rgba(var(--accent-rgb), 0.2);
   border-radius: 12px;
   background: transparent;
   transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
 }
 .island-sheet-cta-secondary:hover {
-  background: rgba(237, 58, 65, 0.1);
+  background: rgba(var(--accent-rgb), 0.1);
   color: #ffffff;
-  border-color: rgba(237, 58, 65, 0.4);
+  border-color: rgba(var(--accent-rgb), 0.4);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -797,7 +797,7 @@ body {
   gap: 0.45rem;
   padding: 0.4rem 0.9rem;
   border-radius: 999px;
-  background: linear-gradient(180deg, var(--casino-from) 0%, #b62127 100%);
+  background: linear-gradient(180deg, #FF5F66 0%, #B62127 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
   font-size: 0.8rem;
   font-weight: 600;
@@ -817,7 +817,7 @@ body {
 }
 
 .hero-cta-primary {
-  background: linear-gradient(180deg, var(--casino-from) 0%, #b62127 100%);
+  background: linear-gradient(180deg, #FF5F66 0%, #B62127 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.35);
   color: #ffffff;
   transition: opacity 0.2s ease;

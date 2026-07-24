@@ -11,7 +11,6 @@ interface TenantSettings {
   name: string;
   description: string;
   logo: string | null;
-  theme: string;
   accentColor: string | null;
   discordInvite: string | null;
   ltcAddress: string | null;
@@ -52,8 +51,7 @@ export default function TenantDashboard() {
     discordInvite: "",
     ltcAddress: "",
     paypalEmail: "",
-    theme: "hyper",
-    accentColor: "#6571FF",
+    accentColor: "",
   });
 
   const loadData = useCallback(async (tenantId: string) => {
@@ -73,8 +71,7 @@ export default function TenantDashboard() {
           discordInvite: data.discordInvite ?? "",
           ltcAddress: data.ltcAddress ?? "",
           paypalEmail: data.paypalEmail ?? "",
-          theme: data.theme ?? "hyper",
-          accentColor: data.accentColor ?? "#6571FF",
+          accentColor: data.accentColor ?? "",
         });
       }
 

@@ -36,8 +36,7 @@ export async function runMigrations() {
         owner_id UUID NOT NULL REFERENCES users(id),
         description TEXT DEFAULT '',
         logo TEXT,
-        theme TEXT NOT NULL DEFAULT 'hyper',
-        accent_color TEXT DEFAULT '#6571FF',
+        accent_color TEXT,
         custom_domain TEXT,
         discord_invite TEXT,
         discord_bot_token TEXT,
@@ -265,6 +264,15 @@ export async function runMigrations() {
       "ALTER TABLE tenants ADD COLUMN IF NOT EXISTS paypal_email TEXT",
       "ALTER TABLE tenant_orders ADD COLUMN IF NOT EXISTS method TEXT NOT NULL DEFAULT 'ltc'",
       "ALTER TABLE tenant_orders ADD COLUMN IF NOT EXISTS paypal_note TEXT",
+      "ALTER TABLE tenants ALTER COLUMN accent_color DROP DEFAULT",
+      "ALTER TABLE tenants ALTER COLUMN accent_color DROP NOT NULL",
+      // Retired per-tenant theme switcher (old Heaven/Hyper palettes) — every
+      // storefront now shares one base theme, with accent_color as the only
+      // per-tenant override. Rows still on the old indigo default should
+      // fall back to the base accent instead of keeping the stale color.
+      "UPDATE tenants SET accent_color = NULL WHERE accent_color = '#6571FF'",
+      "ALTER TABLE tenants ALTER COLUMN theme DROP NOT NULL",
+      "ALTER TABLE tenants ALTER COLUMN theme DROP DEFAULT",
     ];
     for (const stmt of alterStatements) {
       try { await client.query(stmt); } catch { /* column may already exist */ }

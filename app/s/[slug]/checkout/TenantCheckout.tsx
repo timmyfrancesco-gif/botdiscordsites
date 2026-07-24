@@ -14,7 +14,7 @@ interface TenantInfo {
   slug: string;
   name: string;
   logo: string | null;
-  theme: string;
+  accentColor: string | null;
   discordInvite: string;
   hasWallet: boolean;
   paypalEmail: string | null;
@@ -33,14 +33,12 @@ interface OrderState {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-function ThemeApplier({ theme }: { theme: string }) {
-  const { setTheme, theme: currentTheme } = useTheme();
+function ThemeApplier({ accentColor }: { accentColor: string | null }) {
+  const { setAccentOverride } = useTheme();
   useEffect(() => {
-    const original = currentTheme;
-    setTheme(theme === "heaven" ? "heaven" : "hyper", false);
-    return () => setTheme(original, false);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    setAccentOverride(accentColor);
+    return () => setAccentOverride(null);
+  }, [accentColor, setAccentOverride]);
   return null;
 }
 
@@ -57,7 +55,7 @@ export default function TenantCheckout({ tenant }: { tenant: TenantInfo }) {
 
   return (
     <SiteConfigProvider config={siteConfig}>
-      <ThemeApplier theme={tenant.theme} />
+      <ThemeApplier accentColor={tenant.accentColor} />
       <HomepageDataProvider staticData>
         <PageShell>
           <section className="px-4 py-16 sm:px-6 lg:px-8">

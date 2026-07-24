@@ -21,7 +21,6 @@ import {
 import { formatCurrency, formatEur, formatRelativeTime } from "@/lib/format";
 import { uploadImage } from "@/lib/uploadImage";
 import { useAuth } from "@/lib/hooks/useAuth";
-import { useTheme, type ThemeId } from "@/lib/contexts/ThemeContext";
 import dynamic from "next/dynamic";
 import type {
   ApiProduct,
@@ -4693,56 +4692,11 @@ function SettingsView({
   feed: FeedItem[];
 }) {
   const { user: settingsUser } = useAuth();
-  const { theme, setTheme, themes } = useTheme();
   return (
     <div className="space-y-6">
       <div>
         <h3 className="text-xl font-bold text-white">Settings</h3>
         <p className="mt-0.5 text-sm text-zinc-500">Configure your dashboard preferences</p>
-      </div>
-
-      <div className="rounded-xl border border-white/5 p-6" style={{ backgroundColor: "#121214" }}>
-        <h4 className="mb-5 text-sm font-semibold text-white">Site Theme</h4>
-        <p className="mb-4 text-xs text-zinc-500">Choose the visual theme for your storefront</p>
-        <div className="grid grid-cols-2 gap-4">
-          {(Object.entries(themes) as [ThemeId, typeof themes[ThemeId]][]).map(([id, t]) => (
-            <button
-              key={id}
-              type="button"
-              onClick={() => setTheme(id)}
-              className={`group relative flex flex-col overflow-hidden rounded-xl border-2 transition-all ${
-                theme === id
-                  ? "border-[#D88DF8] shadow-[0_0_20px_-4px_rgba(99,102,241,0.4)]"
-                  : "border-white/5 hover:border-white/15"
-              }`}
-            >
-              <div className="flex h-24 items-end gap-2 p-3" style={{ background: t.colors.background }}>
-                <div className="h-full flex-1 rounded-lg" style={{ background: t.colors.backgroundElevated, border: `1px solid ${t.colors.border}` }}>
-                  <div className="flex items-center gap-1.5 p-2">
-                    <span className="h-1.5 w-8 rounded-full" style={{ background: t.colors.accent }} />
-                    <span className="h-1.5 w-5 rounded-full" style={{ background: t.colors.muted, opacity: 0.4 }} />
-                  </div>
-                  <div className="flex gap-1 px-2">
-                    <span className="h-6 w-6 rounded" style={{ background: t.colors.accent, opacity: 0.2 }} />
-                    <span className="h-6 w-6 rounded" style={{ background: t.colors.accent, opacity: 0.2 }} />
-                    <span className="h-6 w-6 rounded" style={{ background: t.colors.accent, opacity: 0.2 }} />
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between px-3 py-2.5" style={{ background: "#121214" }}>
-                <div className="flex items-center gap-2">
-                  <span className="h-3 w-3 rounded-full" style={{ background: t.colors.accent }} />
-                  <span className="text-sm font-semibold text-white">{t.label}</span>
-                </div>
-                {theme === id && (
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 text-[#D88DF8]" fill="none" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
-              </div>
-            </button>
-          ))}
-        </div>
       </div>
 
       <div className="rounded-xl border border-white/5 p-6" style={{ backgroundColor: "#121214" }}>

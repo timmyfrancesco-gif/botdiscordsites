@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { cache } from "react";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Poppins, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/lib/contexts/AuthContext";
 import { LocaleProvider } from "@/lib/contexts/LocaleContext";
 import { ThemeProvider } from "@/lib/contexts/ThemeContext";
@@ -43,9 +43,10 @@ const loadStorefrontConfig = cache(async (): Promise<SiteConfig> => {
   }
 });
 
-const geistSans = Geist({
+const geistSans = Poppins({
   variable: "--font-geist-sans",
   subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
 });
 
 const geistMono = Geist_Mono({

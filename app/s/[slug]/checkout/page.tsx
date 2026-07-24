@@ -31,7 +31,7 @@ export default async function TenantCheckoutPage({
         slug: tenant.slug,
         name: tenant.name,
         logo: tenant.logo,
-        theme: tenant.theme,
+        accentColor: tenant.accentColor,
         discordInvite: tenant.discordInvite ?? "",
         hasWallet: !!tenant.ltcAddress,
         paypalEmail: tenant.paypalEmail ?? null,
