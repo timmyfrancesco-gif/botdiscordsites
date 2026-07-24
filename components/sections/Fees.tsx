@@ -26,7 +26,7 @@ function FeeTable({
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-80px" }}
       transition={{ duration: 0.6, delay: index * 0.1, ease: [0.22, 1, 0.36, 1] }}
-      className="group shine-card overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-7 transition-colors duration-300 hover:bg-[#111111]"
+      className="group shine-card overflow-hidden rounded-2xl border border-white/[0.07] bg-background-elevated p-7 transition-colors duration-300 hover:brightness-110"
     >
       <span className="shine-sweep" aria-hidden />
       <h3 className="text-lg font-bold text-foreground">{title}</h3>
@@ -85,7 +85,7 @@ export default function Fees() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="group shine-card relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-emerald-500/20 bg-[#0d0d0d] p-8 text-center transition-colors duration-300 hover:bg-[#111111]"
+            className="group shine-card relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-emerald-500/20 bg-background-elevated p-8 text-center transition-colors duration-300 hover:brightness-110"
           >
             <span className="shine-sweep" aria-hidden />
             <div className="ring-pulse-wrap mb-4 h-16 w-16">
@@ -108,7 +108,7 @@ export default function Fees() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: "-80px" }}
             transition={{ duration: 0.6, delay: 0.3, ease: [0.22, 1, 0.36, 1] }}
-            className="group shine-card grid grid-cols-2 gap-0 overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d] transition-colors duration-300 hover:bg-[#111111]"
+            className="group shine-card grid grid-cols-2 gap-0 overflow-hidden rounded-2xl border border-white/[0.07] bg-background-elevated transition-colors duration-300 hover:brightness-110"
           >
             <span className="shine-sweep" aria-hidden />
             <div className="flex flex-col items-center justify-center p-8">

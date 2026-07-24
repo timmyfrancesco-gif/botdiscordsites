@@ -56,7 +56,7 @@ export default function TrackOrderPage() {
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="mt-10 flex flex-col gap-4 rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-6 sm:p-7">
+          <form onSubmit={handleSubmit} className="mt-10 flex flex-col gap-4 rounded-2xl border border-white/[0.07] bg-background-elevated p-6 sm:p-7">
             <label className="flex flex-col gap-2 text-sm">
               <span className="font-medium text-foreground">{t("track.orderIdLabel")}</span>
               <input
@@ -80,7 +80,7 @@ export default function TrackOrderPage() {
           </form>
 
           {result ? (
-            <div className="mt-6 rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-6 sm:p-7">
+            <div className="mt-6 rounded-2xl border border-white/[0.07] bg-background-elevated p-6 sm:p-7">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted">{t("track.status")}</span>
                 <span className={`pc-stock ${isPaid ? "pc-stock--in" : "pc-stock--low"} gap-1.5`}>

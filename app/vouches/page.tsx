@@ -37,7 +37,7 @@ function VouchCard({ vouch, index }: { vouch: Vouch; index: number }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.5, delay: (index % 6) * 0.06, ease: [0.22, 1, 0.36, 1] }}
-      className="group flex flex-col gap-3.5 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-5 transition-colors duration-300 hover:bg-[#161616]"
+      className="group flex flex-col gap-3.5 rounded-xl border border-white/[0.07] bg-background-elevated p-5 transition-colors duration-300 hover:brightness-110"
     >
       <div className="flex items-center gap-3">
         {vouch.buyerAvatarUrl ? (

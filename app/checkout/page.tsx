@@ -268,7 +268,7 @@ function CheckoutContent() {
 
   if (queue.length === 0 && !finished) {
     return (
-      <div className="mt-10 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-8 text-center">
+      <div className="mt-10 rounded-xl border border-white/[0.07] bg-background-elevated p-8 text-center">
         <p className="text-sm text-white/40">{t("checkout.emptyCart")}</p>
         <Link
           href="/#shop"
@@ -477,7 +477,7 @@ function CheckoutContent() {
       </div>
 
       {/* Order summary — improved with product image, name, subtitle, qty, price */}
-      <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+      <div className="rounded-xl border border-white/[0.07] bg-background-elevated p-4">
         <div className="flex items-center gap-3">
           {/* Product image or icon fallback */}
           {displayImage ? (
@@ -512,7 +512,7 @@ function CheckoutContent() {
           totalEur={displayTotal}
         />
       ) : dcnMode ? (
-        <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+        <div className="rounded-xl border border-white/[0.07] bg-background-elevated p-4">
           <DcnPayment
             totalEur={displayTotal}
             discordId={user?.discordId}
@@ -522,7 +522,7 @@ function CheckoutContent() {
       ) : !order && currentItem ? (
         <form onSubmit={startPayment} className="flex flex-col gap-5">
           {/* Contact section */}
-          <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+          <div className="rounded-xl border border-white/[0.07] bg-background-elevated p-4">
             <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40">
               {t("checkout.contactDelivery")}
             </h2>
@@ -541,7 +541,7 @@ function CheckoutContent() {
 
           {/* Payment method section — platform products are LTC-only for now */}
           {currentItem?.source !== "platform" && (
-            <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+            <div className="rounded-xl border border-white/[0.07] bg-background-elevated p-4">
               <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40">
                 {t("checkout.paymentMethod")}
               </h2>
@@ -594,7 +594,7 @@ function CheckoutContent() {
           </button>
         </form>
       ) : order ? (
-        <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+        <div className="rounded-xl border border-white/[0.07] bg-background-elevated p-4">
           {order.method === "paypal" ? (
             <PaypalPayment order={order} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
           ) : (
@@ -723,7 +723,7 @@ function SuccessScreen({
         <h3 className="text-accent font-semibold text-lg mb-3">{t("checkout.deliveredItems")}</h3>
 
         {/* Product card */}
-        <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] overflow-hidden">
+        <div className="rounded-xl border border-white/[0.07] bg-background-elevated overflow-hidden">
           {/* Product header row */}
           <button
             type="button"
@@ -861,7 +861,7 @@ function SuccessScreen({
       )}
 
       {/* Leave Feedback */}
-      <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+      <div className="rounded-xl border border-white/[0.07] bg-background-elevated p-4">
         <h3 className="text-accent font-semibold text-lg mb-3">{t("checkout.leaveFeedback")}</h3>
         {reviewSubmitted ? (
           <div className="flex items-center gap-2 text-emerald-400 text-sm">

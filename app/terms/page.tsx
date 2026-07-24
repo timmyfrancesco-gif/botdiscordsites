@@ -39,7 +39,7 @@ function TosCategoryCard({
   const hasAuthor = Boolean(entry?.authorName || entry?.avatarUrl);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d]">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-background-elevated">
       {hasAuthor && (
         <div className="relative">
           {entry?.bannerUrl ? (

@@ -29,7 +29,7 @@ export default function Testimonials() {
               whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true, margin: "-60px" }}
               transition={{ duration: 0.5, delay: (i % 4) * 0.1, ease: [0.22, 1, 0.36, 1] }}
-              className="group relative mb-4 flex min-h-[170px] break-inside-avoid flex-col justify-between overflow-hidden rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-5 transition-colors duration-300 hover:bg-[#161616]"
+              className="group relative mb-4 flex min-h-[170px] break-inside-avoid flex-col justify-between overflow-hidden rounded-xl border border-white/[0.07] bg-background-elevated p-5 transition-colors duration-300 hover:brightness-110"
             >
               <div className="flex flex-1 flex-col gap-3">
                 <div className="flex items-center gap-0.5" role="img" aria-label={`Rated ${review.rating} out of 5 stars`}>

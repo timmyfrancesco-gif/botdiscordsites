@@ -41,7 +41,7 @@ export default function Faq() {
                 whileInView={{ opacity: 1, x: 0 }}
                 viewport={{ once: true, margin: "-60px" }}
                 transition={{ duration: 0.5, delay: i * 0.08, ease: [0.22, 1, 0.36, 1] }}
-                className="group overflow-hidden rounded-xl border border-white/[0.07] bg-[#0d0d0d] transition-colors duration-300 hover:bg-[#161616]"
+                className="group overflow-hidden rounded-xl border border-white/[0.07] bg-background-elevated transition-colors duration-300 hover:brightness-110"
               >
                 <button
                   type="button"

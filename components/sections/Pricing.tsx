@@ -50,8 +50,8 @@ export default function Pricing() {
                 transition={{ duration: 0.6, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] }}
                 className={`group shine-card relative flex flex-col overflow-hidden rounded-2xl border p-7 transition-colors duration-300 ${
                   isFeatured
-                    ? "border-accent/30 bg-[#0d0d0d] hover:bg-[#111111]"
-                    : "border-white/[0.07] bg-[#0d0d0d] hover:bg-[#111111]"
+                    ? "border-accent/30 bg-background-elevated hover:brightness-110"
+                    : "border-white/[0.07] bg-background-elevated hover:brightness-110"
                 }`}
               >
                 <span className="shine-sweep" aria-hidden />

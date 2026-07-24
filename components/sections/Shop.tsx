@@ -56,7 +56,7 @@ function ProductCard({
       whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-60px" }}
       transition={{ duration: 0.6, delay: (index % 4) * 0.08, ease: [0.22, 1, 0.36, 1] }}
-      className={`group shine-card spotlight relative flex flex-col overflow-hidden bg-[#0d0d0d] transition-colors duration-300 hover:bg-[#111111] ${
+      className={`group shine-card spotlight relative flex flex-col overflow-hidden bg-background-elevated transition-colors duration-300 hover:brightness-110 ${
         isBestSeller
           ? "rounded-[calc(1rem-1px)] border-0"
           : "rounded-2xl border border-white/[0.07] hover:border-accent/30"

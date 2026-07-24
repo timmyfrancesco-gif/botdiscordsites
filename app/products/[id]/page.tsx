@@ -169,7 +169,7 @@ export default function ProductPage() {
           <div className="mt-8 grid grid-cols-1 gap-10 lg:grid-cols-[1.35fr_1fr]">
             {/* Image gallery */}
             <div className="flex flex-col gap-3.5">
-              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/[0.07] bg-[#0d0d0d]">
+              <div className="relative aspect-video w-full overflow-hidden rounded-xl border border-white/[0.07] bg-background-elevated">
                 {allImages.length > 0 ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
@@ -190,7 +190,7 @@ export default function ProductPage() {
                       key={i}
                       type="button"
                       onClick={() => setActiveImage(i)}
-                      className={`aspect-video w-full overflow-hidden rounded-lg border bg-[#0d0d0d] transition-colors ${
+                      className={`aspect-video w-full overflow-hidden rounded-lg border bg-background-elevated transition-colors ${
                         activeImage === i
                           ? "border-accent/50"
                           : "border-white/[0.07] hover:border-accent/50"
@@ -214,7 +214,7 @@ export default function ProductPage() {
                         className={`shrink-0 whitespace-nowrap rounded-full border px-4.5 py-2 text-[13px] font-medium transition-colors ${
                           activeTab === "description"
                             ? "border-accent/35 bg-accent/[0.12] text-white"
-                            : "border-white/[0.07] bg-[#0d0d0d] text-white/35 hover:text-white/70"
+                            : "border-white/[0.07] bg-background-elevated text-white/35 hover:text-white/70"
                         }`}
                       >
                         Description
@@ -225,7 +225,7 @@ export default function ProductPage() {
                         className={`shrink-0 whitespace-nowrap rounded-full border px-4.5 py-2 text-[13px] font-medium transition-colors ${
                           activeTab === "instructions"
                             ? "border-accent/35 bg-accent/[0.12] text-white"
-                            : "border-white/[0.07] bg-[#0d0d0d] text-white/35 hover:text-white/70"
+                            : "border-white/[0.07] bg-background-elevated text-white/35 hover:text-white/70"
                         }`}
                       >
                         {t("product.instructions") || "Instructions"}
@@ -233,7 +233,7 @@ export default function ProductPage() {
                     </div>
                   ) : null}
 
-                  <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-5">
+                  <div className="rounded-xl border border-white/[0.07] bg-background-elevated p-5">
                     {(!product.instructions || activeTab === "description") && product.description ? (
                       product.description.includes("<") ? (
                         <SafeHtml
@@ -258,7 +258,7 @@ export default function ProductPage() {
             {/* Details */}
             <div className="flex flex-col gap-3.5">
               {/* Title + trust badges card */}
-              <div className="flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-6">
+              <div className="flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-background-elevated p-6">
                 <h1 className="text-[26px] font-bold leading-tight tracking-tight text-white sm:text-[32px]">
                   {product.name}
                 </h1>
@@ -285,7 +285,7 @@ export default function ProductPage() {
               </div>
 
               {/* Price + Stock */}
-              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-6">
+              <div className="flex flex-wrap items-center gap-3 rounded-xl border border-white/[0.07] bg-background-elevated p-6">
                 <span className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-casino-from to-accent px-4 py-2.5 shadow-[0_14px_30px_rgba(237,58,65,0.3),inset_0_1px_0_rgba(255,255,255,0.35)]">
                   <svg viewBox="0 0 24 24" className="h-4 w-4 text-background" fill="none" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
@@ -314,7 +314,7 @@ export default function ProductPage() {
 
               {/* Variant selector */}
               {hasVariants && product.variants!.length > 1 && (
-                <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-[#0d0d0d]">
+                <div className="overflow-hidden rounded-xl border border-white/[0.07] bg-background-elevated">
                   <div className="border-b border-white/[0.07] px-4 py-3">
                     <span className="text-sm font-semibold text-white">Variant</span>
                   </div>
@@ -364,7 +364,7 @@ export default function ProductPage() {
               )}
 
               {/* Quantity + buttons card */}
-              <div className="flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-6">
+              <div className="flex flex-col gap-4 rounded-xl border border-white/[0.07] bg-background-elevated p-6">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium text-white">{t("product.quantity")}</span>
                   <div className="flex items-center gap-0 overflow-hidden rounded-full border border-white/[0.07] bg-white/[0.03]">
@@ -421,7 +421,7 @@ export default function ProductPage() {
 
               {/* Social proof (live stats) */}
               {(viewers > 0 || purchases > 0) && (
-                <div className="flex flex-col gap-2.5 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-5">
+                <div className="flex flex-col gap-2.5 rounded-xl border border-white/[0.07] bg-background-elevated p-5">
                   {viewers > 0 && (
                     <div className="flex items-center gap-2 text-xs text-white/35">
                       <svg viewBox="0 0 24 24" className="h-[13px] w-[13px] shrink-0 text-[#fa8b90]" fill="none" stroke="currentColor" strokeWidth={2}>

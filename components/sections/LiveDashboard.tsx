@@ -70,7 +70,7 @@ export default function LiveDashboard() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-60px" }}
           transition={{ duration: 0.6, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          className="mt-8 overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-6"
+          className="mt-8 overflow-hidden rounded-2xl border border-white/[0.07] bg-background-elevated p-6"
         >
           <div className="mb-4 flex items-center justify-between">
             <h3 className="flex items-center gap-2 text-lg font-bold text-foreground">

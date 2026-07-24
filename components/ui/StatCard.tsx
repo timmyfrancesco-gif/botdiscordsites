@@ -21,7 +21,7 @@ export default function StatCard({
       viewport={{ once: true }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="group overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-6 transition-colors duration-300 hover:bg-[#111111]"
+      className="group overflow-hidden rounded-2xl border border-white/[0.07] bg-background-elevated p-6 transition-colors duration-300 hover:brightness-110"
     >
       <div className="text-xs font-bold uppercase tracking-[0.2em] text-muted">
         {label}

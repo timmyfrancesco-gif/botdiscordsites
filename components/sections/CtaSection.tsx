@@ -18,7 +18,7 @@ export default function CtaSection() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-          className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d] px-6 py-20 text-center transition-colors duration-300 hover:bg-[#111111] sm:px-16"
+          className="relative overflow-hidden rounded-2xl border border-white/[0.07] bg-background-elevated px-6 py-20 text-center transition-colors duration-300 hover:brightness-110 sm:px-16"
         >
           <h2 className="text-balance text-3xl font-extrabold tracking-tight text-foreground sm:text-5xl">
             {t("cta.title").replace("{siteName}", SITE.name)}

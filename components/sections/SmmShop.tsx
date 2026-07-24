@@ -102,7 +102,7 @@ function SmmProductCard({ product, index }: { product: SmmProduct; index: number
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, delay: (index % 3) * 0.1, ease: [0.22, 1, 0.36, 1] }}
         whileHover={{ y: -6, transition: { duration: 0.25 } }}
-        className="group shine-card relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d] transition-colors duration-300 hover:bg-[#111111]"
+        className="group shine-card relative flex flex-col overflow-hidden rounded-2xl border border-white/[0.07] bg-background-elevated transition-colors duration-300 hover:brightness-110"
       >
         <span className="shine-sweep" aria-hidden />
 
@@ -161,7 +161,7 @@ function SmmProductCard({ product, index }: { product: SmmProduct; index: number
           onClick={() => setOpen(false)}
         >
           <div
-            className="w-full max-w-md rounded-2xl border border-white/[0.07] bg-[#0d0d0d] p-6 shadow-2xl"
+            className="w-full max-w-md rounded-2xl border border-white/[0.07] bg-background-elevated p-6 shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between mb-6">
