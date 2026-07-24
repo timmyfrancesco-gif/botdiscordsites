@@ -7,12 +7,12 @@ import { useLocale } from "@/lib/hooks/useLocale";
 import { useSpotlight } from "@/lib/hooks/useSpotlight";
 
 const SERVICE_KEYS = [
-  { titleKey: "features.escrowTitle", descKey: "features.escrowDesc", feeKey: "features.escrowFee", icon: "shield" },
-  { titleKey: "features.middlemanTitle", descKey: "features.middlemanDesc", feeKey: "features.middlemanFee", icon: "handshake" },
-  { titleKey: "features.exchangeTitle", descKey: "features.exchangeDesc", feeKey: null, icon: "exchange" },
-  { titleKey: "features.casinoTitle", descKey: "features.casinoDesc", feeKey: null, icon: "casino" },
-  { titleKey: "features.adsTitle", descKey: "features.adsDesc", feeKey: null, icon: "megaphone" },
-  { titleKey: "features.shopTitle", descKey: "features.shopDesc", feeKey: null, icon: "shop" },
+  { titleKey: "features.supportTitle", descKey: "features.supportDesc", icon: "support" },
+  { titleKey: "features.trustedTitle", descKey: "features.trustedDesc", icon: "nitro" },
+  { titleKey: "features.instantTitle", descKey: "features.instantDesc", icon: "shieldcheck" },
+  { titleKey: "features.noFeesTitle", descKey: "features.noFeesDesc", icon: "heart" },
+  { titleKey: "features.checkoutTitle", descKey: "features.checkoutDesc", icon: "lock" },
+  { titleKey: "features.fastTitle", descKey: "features.fastDesc", icon: "rocket" },
 ];
 
 function FeatureCard({ service, index, t }: { service: typeof SERVICE_KEYS[0]; index: number; t: (k: string) => string }) {

@@ -65,6 +65,41 @@ const ICONS: Record<string, React.ReactNode> = {
       d="M4 4h16v6H4V4zm0 10h16v6H4v-6zM7 7h.01M7 17h.01"
     />
   ),
+  support: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z"
+    />
+  ),
+  shieldcheck: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6l7-3zm-3 9l2 2 4-4"
+    />
+  ),
+  heart: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 21s-7-4.5-9.5-9A5.5 5.5 0 0112 6a5.5 5.5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"
+    />
+  ),
+  lock: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M5 11a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H7a2 2 0 01-2-2v-8zm3-2V7a4 4 0 118 0v2"
+    />
+  ),
+  rocket: (
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 2c3 1 5 4 5 8 0 3-1 5-2 6l1 4-4-2-4 2 1-4c-1-1-2-3-2-6 0-4 2-7 5-8zm0 8a1.5 1.5 0 100-3 1.5 1.5 0 000 3zM7 15c-2 0-4 2-4 5 3 0 5-2 5-4M17 15c2 0 4 2 4 5-3 0-5-2-5-4"
+    />
+  ),
 };
 
 export default function ServiceIcon({ name, className }: { name: string; className?: string }) {
