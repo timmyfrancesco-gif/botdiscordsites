@@ -2,7 +2,7 @@
 
 :root {
   --background: #0a0a0a;
-  --background-elevated: #141414;
+  --background-elevated: #0d0d0d;
   --foreground: #ffffff;
   --muted: #ffffff99;
   --border: #ffffff0d;
@@ -270,27 +270,6 @@ body {
 }
 
 /* ── Footer top glow line (shimmer) ── */
-.footer-glow-line {
-  position: relative;
-  height: 1px;
-  width: 100%;
-  overflow: hidden;
-  background: linear-gradient(90deg, transparent, var(--border), transparent);
-}
-.footer-glow-line::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  width: 40%;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  animation: footer-glow-sweep 6s ease-in-out infinite;
-  opacity: 0.7;
-}
-@keyframes footer-glow-sweep {
-  0% { transform: translateX(-120%); }
-  50% { transform: translateX(280%); }
-  100% { transform: translateX(280%); }
-}
 
 /* ── Cursor-follow spotlight overlay (reusable; pair with useSpotlight hook) ── */
 .spotlight {
@@ -331,11 +310,6 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .footer-glow-line::before {
-    animation: none;
-    opacity: 0.35;
-    transform: none;
-  }
   .shine-card .shine-sweep {
     animation: none !important;
     opacity: 0 !important;
@@ -389,31 +363,15 @@ body {
 }
 .pc-stock--out {
   background: rgba(255, 255, 255, 0.04);
-  color: rgba(255, 255, 255, 0.35);
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.07);
 }
 
 .footer-link {
-  position: relative;
-  transition: color 0.25s ease;
+  transition: color 0.2s ease;
 }
 .footer-link:hover {
   color: var(--foreground);
-}
-.footer-link::after {
-  content: "";
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 100%;
-  height: 1px;
-  background: linear-gradient(90deg, var(--accent), var(--casino-from));
-  transform: scaleX(0);
-  transform-origin: left;
-  transition: transform 0.3s ease;
-}
-.footer-link:hover::after {
-  transform: scaleX(1);
 }
 
 /* ── Discord-markdown rendered content (server rules / owner TOS) ── */
@@ -842,7 +800,7 @@ body {
 .footer-bg-text {
   position: relative;
   height: 0.82em;
-  font-size: clamp(64px, 15vw, 240px);
+  font-size: clamp(100px, 20vw, 280px);
   overflow: hidden;
   text-align: center;
   pointer-events: none;

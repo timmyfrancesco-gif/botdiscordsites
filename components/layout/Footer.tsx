@@ -12,14 +12,13 @@ export default function Footer() {
   const site = useSiteConfig();
 
   return (
-    <footer className="relative border-t border-border/60 bg-background-elevated/40 backdrop-blur-xl">
-      <div className="footer-glow-line absolute inset-x-0 top-0" aria-hidden />
+    <footer className="relative border-t border-white/[0.07]">
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         whileInView={{ opacity: 1, y: 0 }}
         viewport={{ once: true, margin: "-60px" }}
         transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-        className="mx-auto flex max-w-7xl flex-col gap-10 px-4 pb-14 pt-16 sm:px-6 lg:justify-between lg:flex-row lg:px-8 lg:pt-20"
+        className="mx-auto flex max-w-7xl flex-col gap-9 px-4 pb-14 pt-14 sm:px-6 lg:justify-between lg:flex-row lg:px-8 lg:pt-20"
       >
         {/* Brand */}
         <div className="max-w-xs shrink-0">

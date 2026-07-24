@@ -49,14 +49,14 @@ export default function Faq() {
                   aria-expanded={isOpen}
                   className="flex w-full items-center justify-between gap-6 px-[22px] py-[18px] text-left text-white transition-colors duration-200 hover:text-white/70"
                 >
-                  <span className={`text-[0.9375rem] font-semibold tracking-tight transition-colors ${isOpen ? "text-accent" : "text-foreground"}`}>
+                  <span className="text-[0.9375rem] font-semibold tracking-tight text-foreground">
                     {t(faq.q)}
                   </span>
                   <motion.svg
                     animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
                     viewBox="0 0 16 16"
-                    className={`h-4 w-4 shrink-0 transition-colors ${isOpen ? "text-accent" : "text-white/30"}`}
+                    className={`h-4 w-4 shrink-0 transition-colors ${isOpen ? "text-white/60" : "text-white/30"}`}
                     fill="none"
                     stroke="currentColor"
                     strokeWidth={1.5}

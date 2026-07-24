@@ -49,7 +49,7 @@ export default function CartDrawer({
               animate={{ x: 0 }}
               exit={{ x: "100%" }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="glass-panel fixed right-0 top-0 z-[101] flex h-full w-full max-w-md flex-col border-l border-border p-6 sm:p-8"
+              className="fixed right-0 top-0 z-[101] flex h-full w-full max-w-md flex-col border-l border-white/[0.07] bg-background p-6 sm:p-8"
               role="dialog"
               aria-modal="true"
               aria-label={t("cart.yourCart")}
@@ -60,7 +60,7 @@ export default function CartDrawer({
                   type="button"
                   onClick={onClose}
                   aria-label={t("common.close")}
-                  className="rounded-full border border-border p-1.5 text-muted transition-colors hover:text-foreground"
+                  className="rounded-full border border-white/[0.07] p-1.5 text-muted transition-colors hover:text-foreground"
                 >
                   <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
