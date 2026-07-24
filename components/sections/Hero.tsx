@@ -74,7 +74,7 @@ export default function Hero() {
       id="top"
       className="relative flex min-h-[90vh] flex-col items-center justify-center overflow-hidden px-4 pt-28 pb-16 text-center sm:px-6 lg:px-8"
     >
-      <LightRays color="216,141,248" rayCount={7} />
+      <LightRays color="237,58,65" rayCount={7} />
       <div className="hero-overlay pointer-events-none absolute inset-0 z-[1]" aria-hidden />
 
       <motion.div style={{ opacity: contentOpacity, y: contentY }} className="relative z-10 flex flex-col items-center">

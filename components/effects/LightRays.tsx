@@ -17,7 +17,7 @@ interface LightRaysProps {
  */
 export default function LightRays({
   className = "",
-  color = "216,141,248",
+  color = "237,58,65",
   rayCount = 7,
   followMouse = true,
 }: LightRaysProps) {
