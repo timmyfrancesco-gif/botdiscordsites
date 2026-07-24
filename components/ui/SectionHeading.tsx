@@ -5,11 +5,13 @@ import type { ReactNode } from "react";
 
 export default function SectionHeading({
   eyebrow,
+  icon,
   title,
   description,
   align = "center",
 }: {
   eyebrow?: string;
+  icon?: ReactNode;
   title: ReactNode;
   description?: ReactNode;
   align?: "center" | "left";
@@ -30,8 +32,9 @@ export default function SectionHeading({
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-xs font-bold uppercase tracking-[0.3em] text-accent"
+          className="eyebrow-badge"
         >
+          {icon}
           {eyebrow}
         </motion.span>
       ) : null}

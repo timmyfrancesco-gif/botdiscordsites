@@ -29,20 +29,20 @@ function FeatureCard({ service, index, t }: { service: typeof SERVICE_KEYS[0]; i
         ref={cardRef}
         onMouseMove={onMouseMove}
         onMouseLeave={onMouseLeave}
-        className="feature-card group"
+        className="feature-card group w-full"
       >
         {/* Icon */}
-        <div className="flex h-[60px] w-[60px] shrink-0 items-center justify-center rounded-2xl border border-white/[0.14] bg-gradient-to-b from-white/[0.06] to-white/[0.02] text-accent shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:scale-105 group-hover:border-accent/30 group-hover:shadow-[0_8px_26px_rgba(237,58,65,0.22),inset_0_1px_0_rgba(255,255,255,0.22)]">
-          <ServiceIcon name={service.icon} className="h-7 w-7 transition-all duration-300 group-hover:drop-shadow-[0_0_16px_rgba(237,58,65,0.6)]" />
+        <div className="mb-[22px] flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-[14px] bg-gradient-to-b from-[#301516] to-[#1f0d0e] text-[#fa8b90] shadow-[inset_0_1px_0_rgba(250,139,144,0.2),inset_0_-1px_0_rgba(0,0,0,0.4),inset_1px_0_0_rgba(237,58,65,0.08),inset_-1px_0_0_rgba(237,58,65,0.08)] transition-all duration-300 group-hover:-translate-y-0.5 group-hover:scale-105 group-hover:shadow-[0_8px_26px_rgba(237,58,65,0.28),inset_0_1px_0_rgba(250,139,144,0.3)]">
+          <ServiceIcon name={service.icon} className="h-6 w-6 transition-all duration-300 group-hover:drop-shadow-[0_0_16px_rgba(237,58,65,0.6)]" />
         </div>
 
         {/* Text */}
-        <div className="flex-1 min-w-0">
-          <h4 className="relative text-base font-extrabold text-foreground">
+        <div className="min-w-0 flex-1">
+          <h4 className="relative text-[1.25rem] font-bold tracking-tight text-foreground">
             {t(service.titleKey)}
             <span className="absolute -bottom-1.5 left-0 h-0.5 w-full origin-left scale-x-0 bg-gradient-to-r from-accent to-transparent transition-transform duration-300 group-hover:scale-x-100" />
           </h4>
-          <p className="mt-2.5 text-sm leading-relaxed text-muted">
+          <p className="mt-2 text-sm leading-relaxed text-muted">
             {t(service.descKey)}
           </p>
         </div>
@@ -66,6 +66,11 @@ export default function ServicesGrid() {
       <div className="mx-auto max-w-7xl">
         <SectionHeading
           eyebrow={t("features.eyebrow")}
+          icon={
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 26 26" fill="currentColor" aria-hidden>
+              <path d="M25.326 10.137a1.001 1.001 0 0 0-.807-.68l-7.34-1.066l-3.283-6.651c-.337-.683-1.456-.683-1.793 0L8.82 8.391L1.48 9.457a1 1 0 0 0-.554 1.705l5.312 5.178l-1.254 7.31a1.001 1.001 0 0 0 1.451 1.054L13 21.252l6.564 3.451a1 1 0 0 0 1.451-1.054l-1.254-7.31l5.312-5.178a.998.998 0 0 0 .253-1.024z" />
+            </svg>
+          }
           title={t("features.title")}
           description={t("features.description")}
         />
