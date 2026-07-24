@@ -25,7 +25,17 @@ const NAV_KEYS = [
   { href: "/terms", key: "nav.terms", tenantVisible: false },
 ];
 
-function UserMenu() {
+const DOCK_THRESHOLD = 24;
+
+function DiscordIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor" aria-hidden>
+      <path d="M20.3 4.5A18.5 18.5 0 0015.7 3l-.3.6a14 14 0 014.2 1.6 13.6 13.6 0 00-12.2 0A14 14 0 017.6 3.6L7.3 3a18.5 18.5 0 00-4.6 1.5C1 8 .5 11.4.7 14.8a13.8 13.8 0 004.1 2.1l.8-1.3a8.7 8.7 0 01-1.5-.7l.4-.3a11.7 11.7 0 009 0l.4.3a8.7 8.7 0 01-1.5.7l.8 1.3a13.8 13.8 0 004.1-2.1c.3-3.9-.6-7.3-1.9-10.3zM8.7 12.7c-.8 0-1.4-.7-1.4-1.6 0-.9.6-1.6 1.4-1.6.8 0 1.5.7 1.5 1.6 0 .9-.7 1.6-1.5 1.6zm6.6 0c-.8 0-1.4-.7-1.4-1.6 0-.9.6-1.6 1.4-1.6.9 0 1.5.7 1.5 1.6 0 .9-.6 1.6-1.5 1.6z" />
+    </svg>
+  );
+}
+
+function UserMenu({ variant = "desktop" }: { variant?: "desktop" | "island" }) {
   const { t } = useLocale();
   const { user, logout } = useAuth();
   const [open, setOpen] = useState(false);
@@ -43,12 +53,12 @@ function UserMenu() {
     return (
       <Link
         href="/login"
-        className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+        className={
+          variant === "island"
+            ? "island-nav-cta"
+            : "flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
+        }
       >
-        <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2" />
-          <circle cx="12" cy="7" r="4" />
-        </svg>
         {t("auth.login")}
       </Link>
     );
@@ -59,7 +69,7 @@ function UserMenu() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm font-medium text-foreground transition-colors hover:border-accent"
+        className="flex items-center gap-2 rounded-full border border-white/10 px-3 py-1.5 text-sm font-medium text-white/80 transition-colors hover:border-accent/50 hover:text-white"
       >
         {user.avatar ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -133,6 +143,7 @@ function UserMenu() {
 
 export default function Header() {
   const [open, setOpen] = useState(false);
+  const [docked, setDocked] = useState(false);
   const { t } = useLocale();
   const { user, logout } = useAuth();
   const site = useSiteConfig();
@@ -140,114 +151,140 @@ export default function Header() {
     user && (user.role === "admin" || (user.email && OWNER_EMAILS.includes(user.email.toLowerCase())))
   );
 
+  useEffect(() => {
+    function onScroll() {
+      setDocked(window.scrollY > DOCK_THRESHOLD);
+    }
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Lock body scroll while the mobile sheet is open.
+  useEffect(() => {
+    if (open) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [open]);
+
+  const navLinks = NAV_KEYS.filter((l) => !site.isTenant || l.tenantVisible);
+  const resolveHref = (href: string) =>
+    site.isTenant && href.startsWith("/#") ? `/s/${site.tenantSlug}${href}` : href;
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border/60 bg-background/70 backdrop-blur-xl">
+    <>
       {!site.isTenant && site.bannerEnabled && site.bannerText?.trim() ? (
-        <div className="bg-accent px-4 py-2 text-center text-sm font-semibold text-background">
+        <div className="fixed inset-x-0 top-0 z-[60] bg-accent px-4 py-2 text-center text-sm font-semibold text-background">
           {site.bannerText}
         </div>
       ) : null}
-      <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
-        <Link href={site.isTenant ? `/s/${site.tenantSlug}` : "/#top"} className="nb-brand flex shrink-0 items-center gap-2 text-lg font-bold tracking-tight whitespace-nowrap">
-          {site.tenantLogo ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={site.tenantLogo} alt="" className="h-8 w-8 rounded-full" />
-          ) : (
-            <Logo className="h-8 w-8" />
-          )}
-          <span>{site.name}</span>
-        </Link>
 
-        <nav className="nb-links hidden items-center gap-6 lg:flex">
-          {NAV_KEYS.filter((l) => !site.isTenant || l.tenantVisible).map((link) => {
-            const href = site.isTenant && link.href.startsWith("/#")
-              ? `/s/${site.tenantSlug}${link.href}`
-              : link.href;
-            return (
+      <header className={`island-nav ${docked ? "is-docked" : ""}`}>
+        <div className="island-nav-pill">
+          <nav className="island-nav-row">
+            {/* Brand */}
+            <div className="flex flex-1 items-center justify-start">
               <Link
-                key={link.href}
-                href={href}
-                className="relative text-sm font-medium text-muted transition-colors hover:text-foreground"
+                href={site.isTenant ? `/s/${site.tenantSlug}` : "/#top"}
+                className="nb-brand flex shrink-0 items-center gap-2 text-base font-bold tracking-tight whitespace-nowrap text-white"
               >
-                {t(link.key)}
+                {site.tenantLogo ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={site.tenantLogo} alt="" className="h-7 w-7 rounded-full" />
+                ) : (
+                  <Logo className="h-7 w-7" />
+                )}
+                <span>{site.name}</span>
               </Link>
-            );
-          })}
-        </nav>
+            </div>
 
-        <div className="nb-actions hidden items-center gap-3 lg:flex">
-          <LocaleSelector />
-          <UserMenu />
-          <a
-            href={safeExternalUrl(site.discordInvite)}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:border-accent hover:text-accent"
-          >
-            <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden>
-              <path d="M20.3 4.5A18.5 18.5 0 0015.7 3l-.3.6a14 14 0 014.2 1.6 13.6 13.6 0 00-12.2 0A14 14 0 017.6 3.6L7.3 3a18.5 18.5 0 00-4.6 1.5C1 8 .5 11.4.7 14.8a13.8 13.8 0 004.1 2.1l.8-1.3a8.7 8.7 0 01-1.5-.7l.4-.3a11.7 11.7 0 009 0l.4.3a8.7 8.7 0 01-1.5.7l.8 1.3a13.8 13.8 0 004.1-2.1c.3-3.9-.6-7.3-1.9-10.3zM8.7 12.7c-.8 0-1.4-.7-1.4-1.6 0-.9.6-1.6 1.4-1.6.8 0 1.5.7 1.5 1.6 0 .9-.7 1.6-1.5 1.6zm6.6 0c-.8 0-1.4-.7-1.4-1.6 0-.9.6-1.6 1.4-1.6.9 0 1.5.7 1.5 1.6 0 .9-.6 1.6-1.5 1.6z" />
-            </svg>
-            {t("nav.discord")}
-          </a>
-          {!site.isTenant && isOwner && (
-            <Link
-              href="/dashboard-hm2025"
-              className="rounded-full border border-accent/50 px-4 py-2 text-sm font-semibold text-accent transition-colors hover:border-accent hover:bg-accent/10"
-            >
-              Dashboard
-            </Link>
-          )}
-          <Link
-            href={site.isTenant ? `/s/${site.tenantSlug}/#shop` : "/#shop"}
-            className="rounded-full bg-accent px-5 py-2 text-sm font-semibold text-background shadow-[0_0_24px_-6px_var(--accent)] transition-transform hover:scale-105"
-          >
-            {t("nav.shopNow")}
-          </Link>
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setOpen((v) => !v)}
-          aria-expanded={open}
-          aria-label="Toggle navigation menu"
-          className="flex h-10 w-10 items-center justify-center rounded-lg border border-border text-foreground lg:hidden"
-        >
-          <span className="sr-only">Menu</span>
-          <div className="flex flex-col gap-1.5">
-            <span className="block h-0.5 w-5 bg-current" />
-            <span className="block h-0.5 w-5 bg-current" />
-            <span className="block h-0.5 w-5 bg-current" />
-          </div>
-        </button>
-      </div>
-
-      {open ? (
-        <div className="border-t border-border/60 bg-background/95 px-4 pb-6 pt-2 lg:hidden">
-          <nav className="flex flex-col gap-1">
-            {NAV_KEYS.filter((l) => !site.isTenant || l.tenantVisible).map((link) => {
-              const href = site.isTenant && link.href.startsWith("/#")
-                ? `/s/${site.tenantSlug}${link.href}`
-                : link.href;
-              return (
-                <Link
-                  key={link.href}
-                  href={href}
-                  onClick={() => setOpen(false)}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-muted transition-colors hover:bg-background-elevated hover:text-foreground"
-                >
+            {/* Center links (desktop) */}
+            <div className="nb-links hidden flex-none items-center gap-0.5 px-6 lg:flex">
+              {navLinks.map((link) => (
+                <Link key={link.href} href={resolveHref(link.href)} className="island-nav-link">
                   {t(link.key)}
                 </Link>
-              );
-            })}
+              ))}
+            </div>
+
+            {/* Right actions */}
+            <div className="flex flex-1 items-center justify-end">
+              <div className="nb-actions hidden items-center gap-1.5 lg:flex">
+                <LocaleSelector />
+                <a
+                  href={safeExternalUrl(site.discordInvite)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={t("nav.discord")}
+                  className="island-nav-icon-btn"
+                >
+                  <DiscordIcon />
+                </a>
+                {!site.isTenant && isOwner && (
+                  <Link
+                    href="/dashboard-hm2025"
+                    className="rounded-full border border-accent/50 px-4 py-2 text-xs font-semibold text-accent transition-colors hover:border-accent hover:bg-accent/10"
+                  >
+                    Dashboard
+                  </Link>
+                )}
+                <UserMenu variant="island" />
+                <Link href={site.isTenant ? `/s/${site.tenantSlug}/#shop` : "/#shop"} className="island-nav-cta">
+                  {t("nav.shopNow")}
+                </Link>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setOpen((v) => !v)}
+                aria-expanded={open}
+                aria-label="Toggle navigation menu"
+                className={`island-nav-hamburger ${open ? "is-open" : ""} lg:hidden`}
+              >
+                <span className="sr-only">Menu</span>
+                <svg className="icon-menu" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <rect x="2" y="4.75" width="14" height="1.5" rx="1" fill="currentColor" />
+                  <rect x="2" y="8.25" width="14" height="1.5" rx="1" fill="currentColor" />
+                  <rect x="2" y="11.75" width="14" height="1.5" rx="1" fill="currentColor" />
+                </svg>
+                <svg className="icon-close" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+                  <polyline points="4,7 9,12 14,7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
           </nav>
-          <div className="mt-4 flex flex-col gap-2">
-            <div className="flex justify-center">
+        </div>
+      </header>
+
+      {/* Mobile bottom sheet + backdrop */}
+      <div className={`island-sheet-overlay lg:hidden ${open ? "is-visible" : ""}`} onClick={() => setOpen(false)} aria-hidden />
+      <div className={`island-sheet lg:hidden ${open ? "is-open" : ""}`}>
+        <div className="island-sheet-panel">
+          <div className="island-sheet-handle" />
+          <ul className="flex flex-col gap-0.5 px-4">
+            {navLinks.map((link) => (
+              <li key={link.href}>
+                <Link href={resolveHref(link.href)} onClick={() => setOpen(false)} className="island-sheet-link">
+                  {t(link.key)}
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <div className="island-sheet-divider" />
+
+          <div className="flex flex-col gap-2 px-4 pt-2">
+            <div className="flex justify-center py-1">
               <LocaleSelector />
             </div>
-            {/* Mobile auth */}
+
             {user ? (
               <>
-                <div className="flex items-center justify-center gap-2 py-2">
+                <div className="flex items-center justify-center gap-2 py-1">
                   {user.avatar ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={user.avatar} alt="" className="h-6 w-6 rounded-full" />
@@ -256,61 +293,55 @@ export default function Header() {
                       {user.username.charAt(0).toUpperCase()}
                     </div>
                   )}
-                  <span className="text-sm font-medium text-foreground">{user.username}</span>
+                  <span className="text-sm font-medium text-white">{user.username}</span>
                 </div>
-                {user.role === "admin" && (
+                {(user.role === "admin" || (user.email && OWNER_EMAILS.includes(user.email.toLowerCase()))) && (
                   <Link
                     href="/dashboard-hm2025"
                     onClick={() => setOpen(false)}
-                    className="rounded-full border border-border px-4 py-2 text-center text-sm font-semibold text-accent"
+                    className="island-sheet-cta-secondary"
                   >
                     Dashboard
                   </Link>
                 )}
+                <Link href="/track" onClick={() => setOpen(false)} className="island-sheet-cta-secondary">
+                  {t("auth.myOrders")}
+                </Link>
                 <button
                   type="button"
                   onClick={() => { logout(); setOpen(false); }}
-                  className="rounded-full border border-border px-4 py-2 text-center text-sm font-semibold text-rose-400"
+                  className="island-sheet-cta-secondary"
                 >
                   {t("auth.logout")}
                 </button>
               </>
             ) : (
-              <Link
-                href="/login"
-                onClick={() => setOpen(false)}
-                className="rounded-full border border-border px-4 py-2 text-center text-sm font-semibold text-foreground"
-              >
+              <Link href="/login" onClick={() => setOpen(false)} className="island-sheet-cta-secondary">
                 {t("auth.login")}
               </Link>
             )}
+
             <a
               href={safeExternalUrl(site.discordInvite)}
               target="_blank"
               rel="noopener noreferrer"
-              className="rounded-full border border-border px-4 py-2 text-center text-sm font-semibold text-foreground"
+              onClick={() => setOpen(false)}
+              className="island-sheet-cta-secondary"
             >
+              <DiscordIcon className="icon h-4 w-4" />
               {t("nav.discord")}
             </a>
-            {!site.isTenant && isOwner && (
-              <Link
-                href="/dashboard-hm2025"
-                onClick={() => setOpen(false)}
-                className="rounded-full border border-accent/50 px-4 py-2 text-center text-sm font-semibold text-accent"
-              >
-                Dashboard
-              </Link>
-            )}
+
             <Link
               href={site.isTenant ? `/s/${site.tenantSlug}/#shop` : "/#shop"}
               onClick={() => setOpen(false)}
-              className="rounded-full bg-accent px-4 py-2 text-center text-sm font-semibold text-background"
+              className="island-sheet-cta-primary"
             >
               {t("nav.shopNow")}
             </Link>
           </div>
         </div>
-      ) : null}
-    </header>
+      </div>
+    </>
   );
 }
