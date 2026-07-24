@@ -13,10 +13,10 @@ const en: Record<string, string> = {
   "nav.shopNow": "Shop Now",
 
   // Hero
-  "hero.badge": "Premium Trading Hub",
+  "hero.badge": "Discover New Releases",
   "hero.title": "Easy Boost",
-  "hero.description": "Trade crypto with confidence — escrow, middleman & exchange services built for Discord. Escrow, middleman protection, exchange, advertising slots, a digital shop and a casino — all in one Discord server.",
-  "hero.cta1": "Explore Shop",
+  "hero.description": "The exact same Discord Nitro, just way cheaper.",
+  "hero.cta1": "Browse Products",
   "hero.cta2": "Excellent",
   "hero.cta2Suffix": "out of 5",
   "hero.ctaDiscord": "Join Our Discord",
