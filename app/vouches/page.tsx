@@ -1,5 +1,6 @@
 "use client";
 
+import { motion } from "framer-motion";
 import { Suspense, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import PageShell from "@/components/layout/PageShell";
@@ -29,35 +30,50 @@ function formatDate(iso: string | null): string {
   }
 }
 
-function VouchCard({ vouch }: { vouch: Vouch }) {
+function VouchCard({ vouch, index }: { vouch: Vouch; index: number }) {
   return (
-    <div className="flex items-start gap-4 rounded-2xl border border-border bg-background-elevated/40 p-5">
-      {vouch.buyerAvatarUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={vouch.buyerAvatarUrl} alt="" className="h-11 w-11 shrink-0 rounded-full object-cover" />
-      ) : (
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-bold text-accent">
-          {(vouch.buyerName ?? "?").charAt(0).toUpperCase()}
-        </div>
-      )}
-      <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-          <p className="text-sm font-semibold text-foreground">{vouch.buyerName ?? "Unknown buyer"}</p>
-          <span className="text-xs text-muted">{formatDate(vouch.postedAt ?? vouch.createdAt)}</span>
-        </div>
-        <p className="mt-1 text-sm text-muted">
-          vouched for <span className="font-medium text-foreground">{vouch.sellerName ?? vouch.sellerId}</span>
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
-          <span className="rounded-full border border-border px-2.5 py-1 text-muted">
-            {vouch.quantity}x {vouch.product}
-          </span>
-          <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 font-semibold text-accent">
-            {formatEur(vouch.price)} · {vouch.method}
-          </span>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-60px" }}
+      transition={{ duration: 0.5, delay: (index % 6) * 0.06, ease: [0.22, 1, 0.36, 1] }}
+      className="group flex flex-col gap-3.5 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-5 transition-colors duration-300 hover:bg-[#161616]"
+    >
+      <div className="flex items-center gap-3">
+        {vouch.buyerAvatarUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={vouch.buyerAvatarUrl} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover" />
+        ) : (
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-sm font-bold text-accent">
+            {(vouch.buyerName ?? "?").charAt(0).toUpperCase()}
+          </div>
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-sm font-semibold text-foreground">{vouch.buyerName ?? "Unknown buyer"}</p>
+          <p className="text-[11px] text-white/45">{formatDate(vouch.postedAt ?? vouch.createdAt)}</p>
         </div>
       </div>
-    </div>
+
+      <p className="text-[13px] leading-relaxed text-white/70">
+        vouched for <span className="font-medium text-foreground">{vouch.sellerName ?? vouch.sellerId}</span>
+      </p>
+
+      <div className="flex flex-wrap items-center gap-2 text-xs">
+        <span className="rounded-full border border-white/10 px-2.5 py-1 text-white/60">
+          {vouch.quantity}x {vouch.product}
+        </span>
+        <span className="rounded-full border border-accent/30 bg-accent/10 px-2.5 py-1 font-semibold text-accent">
+          {formatEur(vouch.price)} · {vouch.method}
+        </span>
+      </div>
+
+      <div className="mt-1 flex items-center gap-1.5 border-t border-white/[0.05] pt-3">
+        <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 text-emerald-400" fill="currentColor" aria-hidden>
+          <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
+        </svg>
+        <span className="text-[11px] font-medium text-white/55">Verified Purchase</span>
+      </div>
+    </motion.div>
   );
 }
 
@@ -90,21 +106,29 @@ function VouchesContent() {
 
   return (
     <section className="px-4 py-24 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-2xl">
-        <h1 className="text-3xl font-bold text-foreground sm:text-4xl">Vouches</h1>
-        <p className="mt-2 text-sm text-muted">
-          {sellerId
-            ? `Verified purchases vouched for ${sellerLabel ?? "this seller"} in our Discord server.`
-            : "Verified purchases vouched for by buyers in our Discord server."}
-        </p>
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col items-center gap-4 text-center">
+          <span className="eyebrow-badge">
+            <svg viewBox="0 0 20 20" fill="currentColor" aria-hidden>
+              <path d="M10 1.5l2.6 5.27 5.82.85-4.21 4.1.99 5.78L10 14.9l-5.2 2.6.99-5.78-4.21-4.1 5.82-.85L10 1.5z" />
+            </svg>
+            Reviews
+          </span>
+          <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">Vouches</h1>
+          <p className="max-w-xl text-balance text-sm text-muted sm:text-base">
+            {sellerId
+              ? `Verified purchases vouched for ${sellerLabel ?? "this seller"} in our Discord server.`
+              : "Verified purchases vouched for by buyers in our Discord server."}
+          </p>
+        </div>
 
-        <div className="mt-8 flex flex-col gap-4">
+        <div className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {!loaded ? (
-            <p className="text-sm text-muted">Loading…</p>
+            <p className="col-span-full text-center text-sm text-muted">Loading…</p>
           ) : vouches.length === 0 ? (
-            <p className="text-sm text-muted">No vouches yet.</p>
+            <p className="col-span-full text-center text-sm text-muted">No vouches yet.</p>
           ) : (
-            vouches.map((v) => <VouchCard key={v.id} vouch={v} />)
+            vouches.map((v, i) => <VouchCard key={v.id} vouch={v} index={i} />)
           )}
         </div>
       </div>

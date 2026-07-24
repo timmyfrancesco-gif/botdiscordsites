@@ -39,7 +39,7 @@ function TosCategoryCard({
   const hasAuthor = Boolean(entry?.authorName || entry?.avatarUrl);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-border bg-background-elevated/40">
+    <div className="overflow-hidden rounded-2xl border border-white/[0.07] bg-[#0d0d0d]">
       {hasAuthor && (
         <div className="relative">
           {entry?.bannerUrl ? (
@@ -103,7 +103,7 @@ function OwnerTosCard({
     <button
       type="button"
       onClick={onClick}
-      className="group relative h-72 w-full overflow-hidden rounded-2xl border border-border text-left sm:h-80"
+      className="group relative h-72 w-full overflow-hidden rounded-2xl border border-white/[0.07] text-left sm:h-80"
     >
       {entry?.bannerUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -196,7 +196,7 @@ function ServerRulesSection() {
         </>
       ) : (
         <>
-          <h2 className="text-2xl font-bold text-foreground">Select a TOS to view</h2>
+          <h2 className="text-xl font-bold text-foreground">Select a TOS to view</h2>
           <p className="mt-2 text-sm text-muted">
             Each server owner sets their own terms directly on Discord — pick one to read it.
           </p>
@@ -220,7 +220,24 @@ export default function TermsPage() {
     <PageShell>
       <section className="px-4 py-24 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-3xl">
-          <ServerRulesSection />
+          <div className="flex flex-col items-center gap-4 text-center">
+            <span className="eyebrow-badge">
+              <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                <path d="M6 2a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8l-6-6H6zm7 1.5L18.5 9H13V3.5zM8 13h8v1.5H8V13zm0 3.5h8V18H8v-1.5zM8 9.5h3V11H8V9.5z" />
+              </svg>
+              Legal
+            </span>
+            <h1 className="text-3xl font-extrabold tracking-tight text-foreground sm:text-4xl">
+              Terms of Service
+            </h1>
+            <p className="max-w-xl text-balance text-sm text-muted sm:text-base">
+              Please read these terms carefully before using our services or joining our Discord server.
+            </p>
+          </div>
+
+          <div className="mt-12">
+            <ServerRulesSection />
+          </div>
         </div>
       </section>
     </PageShell>
