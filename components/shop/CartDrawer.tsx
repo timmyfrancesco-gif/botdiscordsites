@@ -81,17 +81,17 @@ export default function CartDrawer({
                       return (
                         <div
                           key={`${line.item.id}-${line.variantId ?? ""}`}
-                          className="flex items-center gap-3 rounded-xl border border-border bg-background/60 p-3"
+                          className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.03] p-3"
                         >
                           {line.item.image ? (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={line.item.image}
                               alt={line.item.name}
-                              className="h-12 w-12 rounded-lg border border-border object-cover"
+                              className="h-12 w-12 rounded-lg border border-white/[0.07] object-cover"
                             />
                           ) : (
-                            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border text-accent">
+                            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-white/[0.07] text-accent">
                               <ServiceIcon name={line.item.icon} className="h-6 w-6" />
                             </div>
                           )}
@@ -106,7 +106,7 @@ export default function CartDrawer({
                             </p>
                           </div>
 
-                          <div className="flex items-center gap-2 rounded-full border border-border px-2 py-1">
+                          <div className="flex items-center gap-2 rounded-full border border-white/[0.07] px-2 py-1">
                             <button
                               type="button"
                               onClick={() => onUpdateQuantity(line.item.id, line.quantity - 1, line.variantId)}
@@ -143,7 +143,7 @@ export default function CartDrawer({
                     })}
                   </div>
 
-                  <div className="mt-6 border-t border-border pt-4">
+                  <div className="mt-6 border-t border-white/[0.07] pt-4">
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted">{t("cart.total")}</span>
                       <span className="text-xl font-bold text-foreground">
@@ -153,14 +153,14 @@ export default function CartDrawer({
                     <Link
                       href={checkoutHref}
                       onClick={onClose}
-                      className="mt-4 block w-full rounded-full bg-accent px-4 py-2.5 text-center text-sm font-semibold text-background transition-opacity hover:opacity-90"
+                      className="hero-cta-primary mt-4 block w-full rounded-full px-4 py-2.5 text-center text-sm font-semibold"
                     >
                       {t("cart.checkoutWithLtc")}
                     </Link>
                     <button
                       type="button"
                       onClick={onClear}
-                      className="mt-2 w-full rounded-full border border-border px-4 py-2 text-xs font-medium text-muted transition-colors hover:text-foreground"
+                      className="hero-cta-secondary mt-2 w-full rounded-full px-4 py-2 text-xs font-medium"
                     >
                       {t("cart.clearCart")}
                     </button>

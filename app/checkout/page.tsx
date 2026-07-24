@@ -268,8 +268,8 @@ function CheckoutContent() {
 
   if (queue.length === 0 && !finished) {
     return (
-      <div className="mt-10 rounded-2xl border border-border bg-background/60 p-8 text-center">
-        <p className="text-sm text-muted">{t("checkout.emptyCart")}</p>
+      <div className="mt-10 rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-8 text-center">
+        <p className="text-sm text-white/40">{t("checkout.emptyCart")}</p>
         <Link
           href="/#shop"
           className="mt-4 inline-block rounded-full border border-accent/30 bg-accent-soft px-5 py-2.5 text-sm font-semibold text-accent transition-colors hover:bg-accent hover:text-background"
@@ -468,7 +468,7 @@ function CheckoutContent() {
               ? t("checkout.step2")
               : t("checkout.step1")}
         </p>
-        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-border">
+        <div className="mt-3 h-1 w-full overflow-hidden rounded-full bg-white/[0.07]">
           <div
             className={`h-full rounded-full transition-all duration-500 ${finished ? "bg-emerald-500" : "bg-accent"}`}
             style={{ width: finished ? "100%" : order ? "66%" : "33%" }}
@@ -477,7 +477,7 @@ function CheckoutContent() {
       </div>
 
       {/* Order summary — improved with product image, name, subtitle, qty, price */}
-      <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
+      <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
         <div className="flex items-center gap-3">
           {/* Product image or icon fallback */}
           {displayImage ? (
@@ -485,20 +485,20 @@ function CheckoutContent() {
             <img
               src={displayImage}
               alt={displayName}
-              className="h-12 w-12 rounded-lg border border-border object-cover"
+              className="h-12 w-12 rounded-lg border border-white/[0.07] object-cover"
             />
           ) : (
-            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-border bg-accent/10 text-lg">
+            <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-white/[0.07] bg-accent/10 text-lg">
               {displayIcon || "📦"}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-            <p className="text-xs text-muted">{currentEntry?.variantTitle ?? "Default"}</p>
+            <p className="text-sm font-semibold text-white truncate">{displayName}</p>
+            <p className="text-xs text-white/40">{currentEntry?.variantTitle ?? "Default"}</p>
           </div>
           <div className="text-right shrink-0">
-            <p className="text-xs text-muted">{displayQueueLen}x</p>
-            <p className="text-sm font-bold text-foreground">{formatPrice(displayTotal)}</p>
+            <p className="text-xs text-white/40">{displayQueueLen}x</p>
+            <p className="text-sm font-bold text-white">{formatPrice(displayTotal)}</p>
           </div>
         </div>
       </div>
@@ -512,7 +512,7 @@ function CheckoutContent() {
           totalEur={displayTotal}
         />
       ) : dcnMode ? (
-        <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
+        <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
           <DcnPayment
             totalEur={displayTotal}
             discordId={user?.discordId}
@@ -522,8 +522,8 @@ function CheckoutContent() {
       ) : !order && currentItem ? (
         <form onSubmit={startPayment} className="flex flex-col gap-5">
           {/* Contact section */}
-          <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
-            <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+          <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+            <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40">
               {t("checkout.contactDelivery")}
             </h2>
             <div className="mt-3">
@@ -534,15 +534,15 @@ function CheckoutContent() {
                 placeholder={t("checkout.emailPlaceholder")}
                 autoComplete="email"
                 autoFocus
-                className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder-muted outline-none transition-colors focus:border-accent"
+                className="w-full rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-accent/50"
               />
             </div>
           </div>
 
           {/* Payment method section — platform products are LTC-only for now */}
           {currentItem?.source !== "platform" && (
-            <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
-              <h2 className="text-xs font-semibold uppercase tracking-widest text-muted">
+            <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
+              <h2 className="text-xs font-semibold uppercase tracking-widest text-white/40">
                 {t("checkout.paymentMethod")}
               </h2>
               <div className="mt-3 flex flex-col gap-2">
@@ -554,16 +554,16 @@ function CheckoutContent() {
                     onClick={() => setPaymentMethod(method.id)}
                     className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-sm transition-colors ${
                       paymentMethod === method.id && method.available
-                        ? "border-accent/60 bg-accent/10 text-accent"
-                        : "border-border bg-background/60 text-foreground"
+                        ? "border-accent/35 bg-accent/[0.12] text-white"
+                        : "border-white/[0.07] bg-white/[0.03] text-white"
                     } ${!method.available ? "cursor-not-allowed opacity-40" : "hover:border-accent/40"}`}
                   >
-                    <span className={`h-9 w-9 shrink-0 overflow-hidden rounded-full ${method.available ? "text-accent" : "text-muted/40"}`}>
+                    <span className={`h-9 w-9 shrink-0 overflow-hidden rounded-full ${method.available ? "text-accent" : "text-white/30"}`}>
                       {method.icon}
                     </span>
                     <span className="text-left">
                       <span className="block font-medium">{method.label}</span>
-                      <span className="block text-xs text-muted">{method.sub}</span>
+                      <span className="block text-xs text-white/40">{method.sub}</span>
                     </span>
                     {paymentMethod === method.id && method.available && (
                       <svg viewBox="0 0 24 24" className="ml-auto h-4 w-4 shrink-0 text-accent" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -581,7 +581,7 @@ function CheckoutContent() {
           <button
             type="submit"
             disabled={loading}
-            className="flex items-center justify-center gap-2 rounded-full bg-accent py-3 text-sm font-semibold text-background shadow-[0_0_24px_-4px_var(--accent)] transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="hero-cta-primary flex items-center justify-center gap-2 rounded-full py-3 text-sm font-semibold disabled:opacity-50"
           >
             {loading ? t("checkout.creatingOrder") : (
               <>
@@ -594,7 +594,7 @@ function CheckoutContent() {
           </button>
         </form>
       ) : order ? (
-        <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
+        <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
           {order.method === "paypal" ? (
             <PaypalPayment order={order} email={email} onPaid={handlePaid} onCancelled={handleCancelled} />
           ) : (
@@ -723,17 +723,17 @@ function SuccessScreen({
         <h3 className="text-accent font-semibold text-lg mb-3">{t("checkout.deliveredItems")}</h3>
 
         {/* Product card */}
-        <div className="rounded-xl border border-border bg-background-elevated/40 overflow-hidden">
+        <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] overflow-hidden">
           {/* Product header row */}
           <button
             type="button"
             onClick={() => setExpanded(!expanded)}
-            className="w-full flex items-center justify-between px-4 py-3 hover:bg-background/40 transition-colors"
+            className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/[0.03] transition-colors"
           >
             <div className="flex items-center gap-3">
               <div className="text-left">
-                <p className="text-sm font-semibold text-foreground">{productName}</p>
-                <p className="text-xs text-muted">Default</p>
+                <p className="text-sm font-semibold text-white">{productName}</p>
+                <p className="text-xs text-white/40">Default</p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -742,7 +742,7 @@ function SuccessScreen({
               </span>
               <svg
                 viewBox="0 0 24 24"
-                className={`h-4 w-4 text-muted transition-transform ${expanded ? "rotate-180" : ""}`}
+                className={`h-4 w-4 text-white/40 transition-transform ${expanded ? "rotate-180" : ""}`}
                 fill="none"
                 stroke="currentColor"
                 strokeWidth={2}
@@ -757,17 +757,17 @@ function SuccessScreen({
 
           {/* Expanded deliverables */}
           {expanded && hasItems && (
-            <div className="border-t border-border px-4 py-3">
-              <p className="text-xs font-semibold uppercase tracking-widest text-muted mb-2">
+            <div className="border-t border-white/[0.07] px-4 py-3">
+              <p className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-2">
                 {t("checkout.deliverables")}
               </p>
               <div className="flex flex-col gap-2">
                 {validItems.map((item, i) => (
                   <div
                     key={i}
-                    className="flex items-center gap-2 rounded-lg border border-border bg-background/60 px-3 py-2"
+                    className="flex items-center gap-2 rounded-lg border border-white/[0.07] bg-white/[0.03] px-3 py-2"
                   >
-                    <span className="flex-1 break-all font-mono text-xs text-foreground">
+                    <span className="flex-1 break-all font-mono text-xs text-white">
                       {item}
                     </span>
                     <button
@@ -796,7 +796,7 @@ function SuccessScreen({
                 <button
                   type="button"
                   onClick={handleDownload}
-                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-border py-2.5 text-sm text-foreground hover:border-accent transition-colors"
+                  className="flex-1 flex items-center justify-center gap-2 rounded-xl border border-white/[0.07] py-2.5 text-sm text-white hover:border-accent/50 transition-colors"
                 >
                   <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden>
                     <path d="M10.75 2.75a.75.75 0 00-1.5 0v8.614L6.295 8.235a.75.75 0 10-1.09 1.03l4.25 4.5a.75.75 0 001.09 0l4.25-4.5a.75.75 0 00-1.09-1.03l-2.955 3.129V2.75z" />
@@ -827,8 +827,8 @@ function SuccessScreen({
 
           {/* No items fallback */}
           {expanded && !hasItems && (
-            <div className="border-t border-border px-4 py-3">
-              <p className="text-sm text-muted">
+            <div className="border-t border-white/[0.07] px-4 py-3">
+              <p className="text-sm text-white/40">
                 {t("checkout.paymentConfirmed")}
               </p>
             </div>
@@ -841,27 +841,27 @@ function SuccessScreen({
         <div className="flex flex-col gap-3">
           {orderId && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">{t("ltcPayment.invoiceId")}</span>
-              <span className="text-sm text-foreground font-mono">{orderId}</span>
+              <span className="text-sm text-white/40">{t("ltcPayment.invoiceId")}</span>
+              <span className="text-sm text-white font-mono">{orderId}</span>
             </div>
           )}
           {email && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">{t("ltcPayment.emailAddress")}</span>
-              <span className="text-sm text-foreground">{email}</span>
+              <span className="text-sm text-white/40">{t("ltcPayment.emailAddress")}</span>
+              <span className="text-sm text-white">{email}</span>
             </div>
           )}
           {totalEur !== undefined && totalEur > 0 && (
             <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">{t("ltcPayment.totalPrice")}</span>
-              <span className="text-sm text-foreground">{formatPrice(totalEur)}</span>
+              <span className="text-sm text-white/40">{t("ltcPayment.totalPrice")}</span>
+              <span className="text-sm text-white">{formatPrice(totalEur)}</span>
             </div>
           )}
         </div>
       )}
 
       {/* Leave Feedback */}
-      <div className="rounded-2xl border border-border bg-background-elevated/40 p-4">
+      <div className="rounded-xl border border-white/[0.07] bg-[#0d0d0d] p-4">
         <h3 className="text-accent font-semibold text-lg mb-3">{t("checkout.leaveFeedback")}</h3>
         {reviewSubmitted ? (
           <div className="flex items-center gap-2 text-emerald-400 text-sm">
@@ -890,7 +890,7 @@ function SuccessScreen({
                       className={`h-8 w-8 transition-colors ${
                         star <= (hoverRating || rating)
                           ? "text-yellow-400"
-                          : "text-border"
+                          : "text-white/10"
                       }`}
                       fill="currentColor"
                       aria-hidden
@@ -907,7 +907,7 @@ function SuccessScreen({
               onChange={(e) => setReviewText(e.target.value)}
               placeholder={t("checkout.ratingPlaceholder")}
               rows={3}
-              className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm text-foreground placeholder-muted outline-none transition-colors focus:border-accent resize-none"
+              className="w-full rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-accent/50 resize-none"
             />
             {reviewError && <p className="text-sm text-rose-400">{reviewError}</p>}
             {/* Submit */}
@@ -915,7 +915,7 @@ function SuccessScreen({
               type="button"
               onClick={handleSubmitReview}
               disabled={rating === 0 || reviewLoading}
-              className="flex items-center justify-center gap-2 rounded-xl bg-accent/80 hover:bg-accent py-3 text-sm font-semibold text-foreground transition-colors disabled:opacity-50"
+              className="hero-cta-primary flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-semibold disabled:opacity-50"
             >
               {reviewLoading ? t("checkout.submittingReview") : t("checkout.submitReview")}
             </button>

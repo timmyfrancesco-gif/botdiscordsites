@@ -60,7 +60,7 @@ export default function DcnPayment({
         <button
           type="button"
           onClick={onBack}
-          className="rounded-full border border-border py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-accent"
+          className="hero-cta-secondary rounded-full py-2.5 text-sm font-semibold"
         >
           Back
         </button>
@@ -78,12 +78,12 @@ export default function DcnPayment({
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-border bg-background/60 p-3">
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">Total (10% off)</p>
           <p className="mt-1 text-lg font-bold text-foreground">{formatEur(discountedTotal)}</p>
           <p className="text-xs text-muted line-through">{formatEur(totalEur)}</p>
         </div>
-        <div className="rounded-xl border border-border bg-background/60 p-3">
+        <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-3">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-muted">DCN required</p>
           <p className="mt-1 text-lg font-bold text-foreground">
             {priceLoading || requiredDcn === null ? "…" : requiredDcn.toFixed(4)}
@@ -111,7 +111,7 @@ export default function DcnPayment({
         )}
       </div>
 
-      <div className="rounded-xl border border-border bg-background/60 p-4 text-sm text-muted">
+      <div className="rounded-xl border border-white/[0.07] bg-white/[0.03] p-4 text-sm text-muted">
         <p className="font-semibold text-foreground">To complete this purchase:</p>
         <ol className="mt-2 flex list-decimal flex-col gap-1 pl-4">
           <li>Open a ticket on our Discord server.</li>
@@ -124,7 +124,7 @@ export default function DcnPayment({
         href={SITE.discordInvite}
         target="_blank"
         rel="noopener noreferrer"
-        className="rounded-full bg-accent py-3 text-center text-sm font-semibold text-background transition-opacity hover:opacity-90"
+        className="hero-cta-primary rounded-full py-3 text-center text-sm font-semibold"
       >
         Open Discord
       </a>
@@ -132,7 +132,7 @@ export default function DcnPayment({
       <button
         type="button"
         onClick={onBack}
-        className="rounded-full border border-border py-2.5 text-sm font-semibold text-foreground transition-colors hover:border-accent"
+        className="hero-cta-secondary rounded-full py-2.5 text-sm font-semibold"
       >
         Choose a different payment method
       </button>

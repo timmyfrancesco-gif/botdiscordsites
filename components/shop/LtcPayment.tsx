@@ -54,7 +54,7 @@ function InlineCopyButton({ text }: { text: string }) {
     } catch {}
   }
   return (
-    <button type="button" onClick={handleCopy} className="shrink-0 text-muted hover:text-accent transition-colors" title="Copy">
+    <button type="button" onClick={handleCopy} className="shrink-0 text-white/40 hover:text-accent transition-colors" title="Copy">
       {copied ? (
         <svg viewBox="0 0 20 20" className="h-3.5 w-3.5 text-emerald-400" fill="currentColor" aria-hidden>
           <path fillRule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clipRule="evenodd" />
@@ -83,7 +83,7 @@ function AccentCopyButton({ text, label }: { text: string; label: string }) {
     <button
       type="button"
       onClick={handleCopy}
-      className="bg-accent/80 hover:bg-accent text-foreground rounded-xl py-3 px-4 w-full flex items-center justify-center gap-2 font-mono text-sm transition-colors"
+      className="hero-cta-primary rounded-xl py-3 px-4 w-full flex items-center justify-center gap-2 font-mono text-sm"
     >
       <span className="truncate">{label}</span>
       {copied ? (
@@ -109,7 +109,7 @@ function CircularProgress({ percentage }: { percentage: number }) {
   return (
     <div className="relative inline-flex items-center justify-center">
       <svg width="128" height="128" viewBox="0 0 128 128" className="-rotate-90">
-        <circle cx="64" cy="64" r={radius} fill="none" stroke="currentColor" strokeWidth="8" className="text-border" />
+        <circle cx="64" cy="64" r={radius} fill="none" stroke="currentColor" strokeWidth="8" className="text-white/[0.08]" />
         <circle
           cx="64"
           cy="64"
@@ -259,7 +259,7 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
   /* ─── Order details section (shared between states) ─── */
   const orderDetailsSection = (
     <>
-      <div className="border-t border-border my-6" />
+      <div className="border-t border-white/[0.07] my-6" />
       <div className="flex flex-col gap-3">
         {/* Invoice ID */}
         <div className="flex items-center justify-between">
@@ -326,7 +326,7 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
         {/* Transaction History */}
         <div className="w-full">
           <h3 className="text-accent font-semibold text-lg mb-3">{t("ltcPayment.transactionHistory")}</h3>
-          <div className="flex items-center gap-3 rounded-xl border border-border bg-background/60 px-4 py-3">
+          <div className="flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3">
             <span className="text-sm font-mono text-foreground">{approxLtc ?? "—"} LTC</span>
             <span className="text-sm text-muted truncate">{order.orderId}</span>
             <svg className="ml-auto h-4 w-4 animate-spin text-accent shrink-0" viewBox="0 0 24 24" fill="none" aria-hidden>
@@ -363,13 +363,13 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
             value={txidInput}
             onChange={(e) => setTxidInput(e.target.value)}
             placeholder="Transaction ID (txid)"
-            className="w-full rounded-xl border border-border bg-background/60 px-4 py-3 text-sm font-mono text-foreground placeholder-muted outline-none transition-colors focus:border-accent"
+            className="w-full rounded-xl border border-white/[0.07] bg-white/[0.03] px-4 py-3 text-sm font-mono text-foreground placeholder-muted outline-none transition-colors focus:border-accent/50"
           />
           {txidError && <p className="text-sm text-rose-400">{txidError}</p>}
           <button
             type="submit"
             disabled={submittingTxid || !txidInput.trim()}
-            className="rounded-full bg-accent py-2.5 text-sm font-semibold text-background transition-opacity hover:opacity-90 disabled:opacity-50"
+            className="hero-cta-primary rounded-full py-2.5 text-sm font-semibold disabled:opacity-50"
           >
             {submittingTxid ? "Verifying…" : "Confirm transaction"}
           </button>
@@ -387,10 +387,10 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
           <img
             src={qrCode}
             alt="LTC payment address QR code"
-            className="h-52 w-52 rounded-xl border border-border"
+            className="h-52 w-52 rounded-xl border border-white/[0.07]"
           />
         ) : (
-          <div className="flex h-52 w-52 items-center justify-center rounded-xl border border-border text-xs text-muted">
+          <div className="flex h-52 w-52 items-center justify-center rounded-xl border border-white/[0.07] text-xs text-muted">
             {t("ltcPayment.generatingQr")}
           </div>
         )}
@@ -405,7 +405,7 @@ export default function LtcPayment({ order, cartTotal, email, onPaid, onCancelle
       {approxLtc && (
         <a
           href={`litecoin:${order.address}?amount=${approxLtc}`}
-          className="border border-border rounded-xl py-3 px-4 w-full flex items-center justify-center gap-2 hover:border-accent text-foreground text-sm transition-colors"
+          className="border border-white/[0.07] rounded-xl py-3 px-4 w-full flex items-center justify-center gap-2 hover:border-accent/50 text-foreground text-sm transition-colors"
         >
           {t("ltcPayment.openWallet")}
           <svg viewBox="0 0 20 20" className="h-4 w-4" fill="currentColor" aria-hidden>

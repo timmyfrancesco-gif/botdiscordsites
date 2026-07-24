@@ -281,6 +281,7 @@ const en: Record<string, string> = {
   "product.purchaseNow": "Purchase Now",
   "product.inStock": "In Stock",
   "product.outOfStock": "Out of Stock",
+  "product.instructions": "Instructions",
 
   // Dashboard (public)
   "dashboard.eyebrow": "Live Dashboard",

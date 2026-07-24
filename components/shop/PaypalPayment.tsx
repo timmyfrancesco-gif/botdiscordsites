@@ -91,7 +91,7 @@ export default function PaypalPayment({
         <p className="text-xs font-semibold uppercase tracking-widest text-muted">
           Send to (PayPal email)
         </p>
-        <div className="mt-1 flex items-center gap-2 rounded-xl border border-border bg-background/60 px-3 py-2">
+        <div className="mt-1 flex items-center gap-2 rounded-xl border border-white/[0.07] bg-white/[0.03] px-3 py-2">
           <span className="flex-1 break-all font-mono text-sm text-foreground">
             {order.paypalEmail}
           </span>
@@ -137,7 +137,7 @@ export default function PaypalPayment({
         href="https://www.paypal.com/myaccount/transfer/homepage/pay"
         target="_blank"
         rel="noopener noreferrer"
-        className="rounded-full bg-accent py-3 text-center text-sm font-semibold text-background transition-opacity hover:opacity-90"
+        className="hero-cta-primary rounded-full py-3 text-center text-sm font-semibold"
       >
         Open PayPal
       </a>
